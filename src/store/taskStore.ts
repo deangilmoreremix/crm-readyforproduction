@@ -21,6 +21,7 @@ interface TaskStore {
   activities: TaskActivity[];
   calendarEvents: CalendarEvent[];
   analytics: TaskAnalytics;
+  isLoading: boolean;
   
   // Filter states
   statusFilter: TaskStatus | 'all';
@@ -31,6 +32,7 @@ interface TaskStore {
   activityFilter: ActivityFilter;
   
   // Actions - Tasks
+  fetchTasks: () => Promise<void>;
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateTask: (id: string, updates: Partial<Task>) => void;
   deleteTask: (id: string) => void;
@@ -49,6 +51,7 @@ export const useTaskStore = create<TaskStore>()(
       templates: [],
       activities: [],
       calendarEvents: [],
+      isLoading: false,
       analytics: {
         totalTasks: 0,
         completedTasks: 0,
@@ -77,6 +80,19 @@ export const useTaskStore = create<TaskStore>()(
       },
       
       // Task actions
+      fetchTasks: async () => {
+        set({ isLoading: true });
+        try {
+          // Simulate API call - replace with actual API call when backend is ready
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          // For now, keep existing tasks or initialize with empty array
+          set({ isLoading: false });
+        } catch (error) {
+          console.error('Error fetching tasks:', error);
+          set({ isLoading: false });
+        }
+      },
+      
       addTask: (taskData) => {
         const newTask: Task = {
           ...taskData,
