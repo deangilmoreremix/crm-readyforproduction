@@ -26,11 +26,30 @@ const AITools = lazy(() => import('./pages/AITools'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const AIIntegration = lazy(() => import('./pages/AIIntegration'));
 const MobileResponsiveness = lazy(() => import('./pages/MobileResponsiveness'));
+// Create missing page components
 const AIGoals = lazy(() => import('./pages/AIGoals'));
-const Appointments = lazy(() => import('./pag\es/Appointments'));
+const Appointments = lazy(() => import('./pages/Appointments'));
 const Settings = lazy(() => import('./pages/Settings'));
-const PlaceholderPage = lazy(() => import('./pages/PlaceholderPage'));
-const ProtectedRoute = lazy(() => import('./components/ProtectedRoute'));
+
+import './components/styles/design-system.css';
+
+// Placeholder component for routes not yet implemented
+const PlaceholderPage = ({ title, description }: { title: string; description?: string }) => (
+  <div className="min-h-screen bg-gray-50 p-8">
+    <div className="max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">{title}</h1>
+      <div className="bg-white rounded-lg shadow p-6">
+        <p className="text-gray-600">{description || "This page is coming soon..."}</p>
+      </div>
+    </div>
+  </div>
+);
+
+// Protected Route component (placeholder for future auth)
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  // TODO: Add authentication logic here when auth is implemented
+  return <>{children}</>;
+};
 
 function App() {
   return (
@@ -105,7 +124,7 @@ function App() {
                             <Pipeline />
                           </ProtectedRoute>
                         } />
-                        
+                                        
                         {/* Communication */}
                         <Route path="/communication" element={
                           <ProtectedRoute>
@@ -188,23 +207,10 @@ function App() {
                         
                         <Route path="/features/pipeline" element={
                           <ProtectedRoute>
-                            <PlaceholderPage title="Pipeline Features" description="Advanced pipeline management capabilities" />
+                            <PlaceholderPage title="Pipeline Features" description="Advanced sales pipeline management" />
                           </ProtectedRoute>
                         } />
                         
-                        {/* Sales Tools Routes */}
-                        <Route path="/lead-automation" element={<ProtectedRoute><PlaceholderPage title="Lead Automation" description="Automate lead generation and nurturing processes." /></ProtectedRoute>} />
-                        <Route path="/circle-prospecting" element={<ProtectedRoute><PlaceholderPage title="Circle Prospecting" description="Identify and target prospects in your network." /></ProtectedRoute>} />
-                        <Route path="/phone-system" element={<ProtectedRoute><PlaceholderPage title="Phone System" description="Integrated phone system for sales calls." /></ProtectedRoute>} />
-                        <Route path="/invoicing" element={<ProtectedRoute><PlaceholderPage title="Invoicing" description="Create and manage invoices for your sales." /></ProtectedRoute>} />
-                        <Route path="/sales-analytics" element={<ProtectedRoute><PlaceholderPage title="Sales Analytics" description="Analyze sales performance and trends." /></ProtectedRoute>} />
-                        <Route path="/quote-builder" element={<ProtectedRoute><PlaceholderPage title="Quote Builder" description="Build professional quotes quickly and easily." /></ProtectedRoute>} />
-                        <Route path="/commission-tracker" element={<ProtectedRoute><PlaceholderPage title="Commission Tracker" description="Track and manage sales commissions." /></ProtectedRoute>} />
-                        <Route path="/follow-up-reminders" element={<ProtectedRoute><PlaceholderPage title="Follow-up Reminders" description="Never miss a follow-up with automated reminders." /></ProtectedRoute>} />
-                        <Route path="/territory-management" element={<ProtectedRoute><PlaceholderPage title="Territory Management" description="Manage and optimize sales territories." /></ProtectedRoute>} />
-                        
-                        {/* Task Tools Routes */}
-                        <Route path="/task-automation" element={<ProtectedRoute><PlaceholderPage title="Task Automation" description="Automate repetitive tasks and workflows." /></ProtectedRoute>} />
                         <Route path="/project-tracker" element={<ProtectedRoute><PlaceholderPage title="Project Tracker" description="Manage projects and track progress." /></ProtectedRoute>} />
                         <Route path="/time-tracking" element={<ProtectedRoute><PlaceholderPage title="Time Tracking" description="Log and analyze time spent on tasks and projects." /></ProtectedRoute>} />
                         <Route path="/workflow-builder" element={<ProtectedRoute><PlaceholderPage title="Workflow Builder" description="Visually design and automate business processes." /></ProtectedRoute>} />
@@ -247,7 +253,6 @@ function App() {
                         <Route path="/voice-tone" element={<ProtectedRoute><PlaceholderPage title="Voice Tone Optimizer" description="Analyze and optimize the tone of your voice communications." /></ProtectedRoute>} />
                         <Route path="/customer-persona" element={<ProtectedRoute><PlaceholderPage title="Customer Persona" description="Create detailed customer personas based on data." /></ProtectedRoute>} />
                         <Route path="/visual-content" element={<ProtectedRoute><PlaceholderPage title="Visual Content Generator" description="Generate visual content for marketing materials." /></ProtectedRoute>} />
-                        <Route path="/meeting-agenda" element={<ProtectedRoute><PlaceholderPage title="Meeting Agenda" description="Generate structured meeting agendas automatically." /></ProtectedRoute>} />
                         <Route path="/ai-assistant" element={<ProtectedRoute><PlaceholderPage title="AI Assistant" description="Your personal AI assistant for various CRM tasks." /></ProtectedRoute>} />
                         <Route path="/vision-analyzer" element={<ProtectedRoute><PlaceholderPage title="Vision Analyzer" description="Analyze images and extract relevant information." /></ProtectedRoute>} />
                         <Route path="/semantic-search" element={<ProtectedRoute><PlaceholderPage title="Semantic Search" description="Perform intelligent searches based on meaning, not just keywords." /></ProtectedRoute>} />
