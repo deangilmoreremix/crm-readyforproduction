@@ -69,7 +69,7 @@ function App() {
                         <Route path="/" element={<Navigate to="/dashboard" replace />} />
                         
                         {/* Main Application Routes */}
-                                                <Route path="/dashboard" element={
+                        <Route path="/dashboard" element={
                           <ProtectedRoute>
                             <Dashboard />
                           </ProtectedRoute>
@@ -102,7 +102,7 @@ function App() {
                         
                         {/* Task Management */}
                         <Route path="/tasks" element={
-                                                    <ProtectedRoute>
+                          <ProtectedRoute>
                             <TasksNew />
                           </ProtectedRoute>
                         } />
@@ -148,7 +148,7 @@ function App() {
                         } />
                         
                         <Route path="/ai-integration" element={
-                                          <ProtectedRoute>
+                          <ProtectedRoute>
                             <AIIntegration />
                           </ProtectedRoute>
                         } />
@@ -170,7 +170,7 @@ function App() {
                           <ProtectedRoute>
                             <Appointments />
                           </ProtectedRoute>
-                        }  />
+                        } />
                         
                         {/* Settings & Configuration */}
                         <Route path="/settings" element={
@@ -208,6 +208,10 @@ function App() {
                         
                         <Route path="/features/pipeline" element={
                           <ProtectedRoute>
+                            <PlaceholderPage title="Pipeline Features" description="Advanced sales pipeline management" />
+                          </ProtectedRoute>
+                        } />
+                        
                         <Route path="/project-tracker" element={<ProtectedRoute><PlaceholderPage title="Project Tracker" description="Manage projects and track progress." /></ProtectedRoute>} />
                         <Route path="/time-tracking" element={<ProtectedRoute><PlaceholderPage title="Time Tracking" description="Log and analyze time spent on tasks and projects." /></ProtectedRoute>} />
                         <Route path="/workflow-builder" element={<ProtectedRoute><PlaceholderPage title="Workflow Builder" description="Visually design and automate business processes." /></ProtectedRoute>} />
@@ -270,7 +274,7 @@ function App() {
                         <Route path="*" element={<Navigate to="/dashboard" replace />} />
                       </Routes>
                     </Suspense>
-                    </div>
+                  </div>
                 </DashboardLayoutProvider>
               </NavigationProvider>
             </VideoCallProvider>
