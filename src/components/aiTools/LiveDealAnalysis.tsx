@@ -38,6 +38,13 @@ const LiveDealAnalysis: React.FC = () => {
     setError(null);
     
     try {
+      // Check if Google AI API key is configured
+      const apiKey = import.meta.env.VITE_GOOGLE_AI_API_KEY;
+      if (!apiKey || apiKey === 'your_google_ai_api_key') {
+        console.log('Google AI API key not configured, using basic analysis only');
+        setError('Google AI API key not configured. Using basic analysis mode.');
+      }
+      
       // Process basic insights without requiring AI
       const activeDeals = Object.values(deals).filter(deal => 
         deal.stage !== 'closed-won' && deal.stage !== 'closed-lost'
@@ -124,7 +131,7 @@ const LiveDealAnalysis: React.FC = () => {
       setInsights(initialInsights);
       
       // Now enhance with AI insights if we have enough deals
-      if (activeDeals.length >= 3) {
+      if (activeDeals.length >= 3 && apiKey && apiKey !== 'your_google_ai_api_key') {
         try {
           // Prepare data for AI analysis
           const dealData = {
