@@ -26,6 +26,13 @@ const AITools = lazy(() => import('./pages/AITools'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const AIIntegration = lazy(() => import('./pages/AIIntegration'));
 const MobileResponsiveness = lazy(() => import('./pages/MobileResponsiveness'));
+import { ModalsProvider } from './ModalsProvider';
+import { EnhancedHelpProvider } from '../contexts/EnhancedHelpContext';
+import { VideoCallProvider } from '../contexts/VideoCallContext';
+import { NavigationProvider } from '../contexts/NavigationContext';
+import { DashboardLayoutProvider } from '../contexts/DashboardLayoutContext';
+import Navbar from './Navbar';
+import { LoadingSpinner } from './ui/LoadingSpinner';
 // Create missing page components
 const AIGoals = lazy(() => import('./pages/AIGoals'));
 const Appointments = lazy(() => import('./pages/Appointments'));
