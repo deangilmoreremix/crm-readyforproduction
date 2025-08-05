@@ -18,6 +18,7 @@ import SystemOverview from './pages/SystemOverview';
 const Tasks = lazy(() => import('./pages/Tasks'));
 const TasksNew = lazy(() => import('./pages/TasksNew'));
 const Communication = lazy(() => import('./pages/Communication'));
+const TasksSimple = lazy(() => import('./pages/TasksSimple'));
 const Contacts = lazy(() => import('./pages/Contacts'));
 const ContactsEnhanced = lazy(() => import('./pages/ContactsEnhanced'));
 const Pipeline = lazy(() => import('./pages/Pipeline'));
@@ -25,6 +26,11 @@ const AITools = lazy(() => import('./pages/AITools'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const AIIntegration = lazy(() => import('./pages/AIIntegration'));
 const MobileResponsiveness = lazy(() => import('./pages/MobileResponsiveness'));
+
+// Create missing page components
+const AIGoals = lazy(() => import('./pages/AIGoals'));
+const Appointments = lazy(() => import('./pages/Appointments'));
+const Settings = lazy(() => import('./pages/Settings'));
 
 import './components/styles/design-system.css';
 
