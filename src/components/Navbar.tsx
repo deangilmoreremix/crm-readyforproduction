@@ -115,7 +115,7 @@ const Navbar: React.FC = () => {
                           key={item.name}
                           to={item.href}
                           className={`block px-4 py-2 text-sm transition-colors ${
-                            isD ark
+                            isDark
                               ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
                               : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                           }`}

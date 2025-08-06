@@ -390,7 +390,7 @@ export default function ProposalGenerator() {
               isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
             } max-h-96 overflow-y-auto`}>
               <pre className="whitespace-pre-wrap text-sm">{generatedProposal}</pre>
-            </div>
+            </motion.div>
           ) : (
             <div className={`p-8 text-center rounded-lg border-2 border-dashed ${
               isDark ? 'border-gray-600 text-gray-400' : 'border-gray-300 text-gray-500'
