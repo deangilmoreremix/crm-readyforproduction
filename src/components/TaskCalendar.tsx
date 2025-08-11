@@ -1,467 +1,262 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, momentLocalizer, View, Event, NavigateAction, ToolbarProps } from 'react-big-calendar';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from './ui/dialog';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from './ui/dropdown-menu';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  User,
-  MapPin,
-  Plus,
-  Filter,
-  Eye,
-  EyeOff,
-} from 'lucide-react';
+import { Task } from '../types';
 import { useTaskStore } from '../store/taskStore';
-import { Task } from '../types/task';
-import { TaskDetailsModal } from './TaskDetailsModal';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { Calendar } from 'lucide-react';
 
+// Setup localizer for react-big-calendar
 const localizer = momentLocalizer(moment);
 
-interface TaskEvent extends Event {
-  resource: {
-    type: 'task' | 'calendar-event';
-    data: Task | any;
-    priority?: Task['priority'];
-    status?: Task['status'];
-  };
+interface TaskCalendarProps {
+  onTaskSelect?: (task: Task) => void;
 }
 
-interface EventModalProps {
-  event: TaskEvent | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onEdit: () => void;
-}
-
-const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose, onEdit }) => {
-  if (!event) return null;
-
-  const { resource } = event;
-  const isTask = resource.type === 'task';
-  const data = resource.data;
-
-  const getPriorityColor = (priority: Task['priority']) => {
-    switch (priority) {
-      case 'low': return 'bg-green-100 text-green-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'urgent': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusColor = (status: Task['status']) => {
-    switch (status) {
-      case 'pending': return 'bg-gray-100 text-gray-800';
-      case 'in-progress': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'overdue': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{event.title}</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          {/* Event Details */}
-          <div className="space-y-3">
-            {/* Time */}
-            <div className="flex items-center space-x-2 text-sm">
-              <Clock className="h-4 w-4 text-gray-500" />
-              <span>
-                {moment(event.start).format('MMMM D, YYYY [at] h:mm A')}
-                {event.end && ` - ${moment(event.end).format('h:mm A')}`}
-              </span>
-            </div>
-
-            {/* Task-specific details */}
-            {isTask && (
-              <>
-                <div className="flex items-center space-x-2">
-                  <Badge className={getPriorityColor(resource.priority!)}>
-                    {resource.priority!.toUpperCase()}
-                  </Badge>
-                  <Badge className={getStatusColor(resource.status!)}>
-                    {resource.status!.replace('-', ' ').toUpperCase()}
-                  </Badge>
-                </div>
-
-                {data.assignedUserName && (
-                  <div className="flex items-center space-x-2 text-sm">
-                    <User className="h-4 w-4 text-gray-500" />
-                    <span>{data.assignedUserName}</span>
-                  </div>
-                )}
-
-                {data.description && (
-                  <div className="text-sm text-gray-600">
-                    <p>{data.description}</p>
-                  </div>
-                )}
-
-                {data.estimatedDuration && (
-                  <div className="flex items-center space-x-2 text-sm text-gray-500">
-                    <Clock className="h-4 w-4" />
-                    <span>{data.estimatedDuration} minutes</span>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Calendar event details */}
-            {!isTask && (
-              <>
-                {data.location && (
-                  <div className="flex items-center space-x-2 text-sm">
-                    <MapPin className="h-4 w-4 text-gray-500" />
-                    <span>{data.location}</span>
-                  </div>
-                )}
-
-                {data.description && (
-                  <div className="text-sm text-gray-600">
-                    <p>{data.description}</p>
-                  </div>
-                )}
-
-                {data.attendees && data.attendees.length > 0 && (
-                  <div className="text-sm">
-                    <span className="font-medium">Attendees:</span>
-                    <div className="mt-1 space-y-1">
-                      {data.attendees.map((attendee: string, index: number) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <User className="h-3 w-3 text-gray-400" />
-                          <span>{attendee}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center justify-end space-x-2 pt-4 border-t">
-            <Button variant="outline" onClick={onClose}>
-              Close
-            </Button>
-            <Button onClick={onEdit}>
-              Edit {isTask ? 'Task' : 'Event'}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-export const TaskCalendar: React.FC = () => {
-  const { 
-    tasks, 
-    calendarEvents,
-  } = useTaskStore();
+const TaskCalendar: React.FC<TaskCalendarProps> = ({ onTaskSelect }) => {
+  const { tasks } = useTaskStore();
+  const [view, setView] = useState<'month' | 'week' | 'day'>('month');
+  const [date, setDate] = useState(new Date());
+  const [showAll, setShowAll] = useState(false);
   
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [currentView, setCurrentView] = useState<View>('month');
-  const [selectedEvent, setSelectedEvent] = useState<TaskEvent | null>(null);
-  const [showEventModal, setShowEventModal] = useState(false);
-  const [showTaskModal, setShowTaskModal] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
-  // Mock calendars data for now
-  const calendars = [
-    { id: 'default', name: 'Default', color: '#3174ad', isVisible: true },
-    { id: 'personal', name: 'Personal', color: '#10b981', isVisible: true },
-    { id: 'work', name: 'Work', color: '#f59e0b', isVisible: true },
-  ];
-
-  const [visibleCalendars, setVisibleCalendars] = useState<string[]>(
-    calendars.filter(cal => cal.isVisible).map(cal => cal.id)
-  );
-
-  // Convert tasks and calendar events to calendar events
-  const events: TaskEvent[] = useMemo(() => {
-    const taskEvents: TaskEvent[] = tasks
-      .filter(task => task.dueDate)
+  // Format tasks as events for the calendar
+  const events = useMemo(() => {
+    return Object.values(tasks)
+      .filter(task => task.dueDate || showAll) // Only show tasks with due dates unless showAll is true
       .map(task => ({
         id: task.id,
         title: task.title,
-        start: task.dueDate!,
-        end: task.dueDate!,
-        allDay: true,
-        resource: {
-          type: 'task' as const,
-          data: task,
-          priority: task.priority,
-          status: task.status,
-        },
+        start: task.dueDate || task.createdAt,
+        end: task.dueDate || task.createdAt,
+        allDay: !task.dueDate?.getHours(), // If no time is set, treat as all-day
+        resource: task
       }));
-
-    const calendarEventItems: TaskEvent[] = calendarEvents
-      .filter(event => visibleCalendars.includes(event.calendarId))
-      .map(event => ({
-        id: event.id,
-        title: event.title,
-        start: event.startDate,
-        end: event.endDate,
-        allDay: event.isAllDay,
-        resource: {
-          type: 'calendar-event' as const,
-          data: event,
-        },
-      }));
-
-    return [...taskEvents, ...calendarEventItems];
-  }, [tasks, calendarEvents, visibleCalendars]);
-
-  const handleSelectEvent = (event: TaskEvent) => {
-    setSelectedEvent(event);
-    setShowEventModal(true);
-  };
-
-  const handleEditEvent = () => {
-    if (!selectedEvent) return;
-
-    setShowEventModal(false);
+  }, [tasks, showAll]);
+  
+  // Custom styling for events based on task status and priority
+  const eventStyleGetter = (event: unknown) => {
+    const task = event.resource as Task;
+    const isOverdue = task.dueDate && !task.completed && task.dueDate < new Date();
     
-    if (selectedEvent.resource.type === 'task') {
-      setSelectedTask(selectedEvent.resource.data);
-      setShowTaskModal(true);
-    } else {
-      // Handle calendar event editing
-      console.log('Edit calendar event:', selectedEvent.resource.data);
+    let backgroundColor = '#3B82F6'; // Default blue
+    
+    if (task.completed) {
+      backgroundColor = '#10B981'; // Green for completed
+    } else if (isOverdue) {
+      backgroundColor = '#EF4444'; // Red for overdue
+    } else if (task.priority === 'high') {
+      backgroundColor = '#F97316'; // Orange for high priority
+    } else if (task.priority === 'low') {
+      backgroundColor = '#14B8A6'; // Teal for low priority
     }
-  };
-
-  const handleNavigate = (date: Date) => {
-    setCurrentDate(date);
-  };
-
-  const handleViewChange = (view: View) => {
-    setCurrentView(view);
-  };
-
-  const toggleCalendarVisibility = (calendarId: string) => {
-    setVisibleCalendars(prev => 
-      prev.includes(calendarId)
-        ? prev.filter(id => id !== calendarId)
-        : [...prev, calendarId]
-    );
-  };
-
-  // Custom event style getter
-  const eventStyleGetter = (event: TaskEvent) => {
-    if (event.resource.type === 'task') {
-      const { priority, status } = event.resource;
-      
-      let backgroundColor = '#3174ad';
-      let borderColor = '#3174ad';
-      
-      if (status === 'completed') {
-        backgroundColor = '#10b981';
-        borderColor = '#10b981';
-      } else if (status === 'cancelled') {
-        backgroundColor = '#f59e0b';
-        borderColor = '#f59e0b';
-      } else if (priority === 'urgent') {
-        backgroundColor = '#ef4444';
-        borderColor = '#ef4444';
-      } else if (priority === 'high') {
-        backgroundColor = '#f97316';
-        borderColor = '#f97316';
+    
+    return {
+      style: {
+        backgroundColor,
+        borderRadius: '4px',
+        color: '#fff',
+        border: 'none',
+        opacity: task.completed ? 0.7 : 1,
+        textDecoration: task.completed ? 'line-through' : 'none'
       }
-
-      return {
-        style: {
-          backgroundColor,
-          borderColor,
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          fontSize: '12px',
-        }
-      };
-    } else {
-      // Calendar event styling
-      const calendar = calendars.find(cal => cal.id === event.resource.data.calendarId);
-      return {
-        style: {
-          backgroundColor: calendar?.color || '#6b7280',
-          borderColor: calendar?.color || '#6b7280',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          fontSize: '12px',
-        }
-      };
-    }
-  };
-
-  // Custom toolbar
-  const CustomToolbar = ({ date, view, onNavigate, onView }: ToolbarProps<TaskEvent, object>) => {
-    const navigate = (action: NavigateAction) => {
-      onNavigate(action);
     };
-
+  };
+  
+  // Custom component for the toolbar
+  const CustomToolbar = (toolbar: unknown) => {
+    const goToBack = () => {
+      const newDate = new Date(toolbar.date);
+      
+      if (toolbar.view === 'month') {
+        newDate.setMonth(newDate.getMonth() - 1);
+      } else if (toolbar.view === 'week') {
+        newDate.setDate(newDate.getDate() - 7);
+      } else {
+        newDate.setDate(newDate.getDate() - 1);
+      }
+      
+      toolbar.onNavigate('date', newDate);
+    };
+    
+    const goToNext = () => {
+      const newDate = new Date(toolbar.date);
+      
+      if (toolbar.view === 'month') {
+        newDate.setMonth(newDate.getMonth() + 1);
+      } else if (toolbar.view === 'week') {
+        newDate.setDate(newDate.getDate() + 7);
+      } else {
+        newDate.setDate(newDate.getDate() + 1);
+      }
+      
+      toolbar.onNavigate('date', newDate);
+    };
+    
+    const goToToday = () => {
+      toolbar.onNavigate('date', new Date());
+    };
+    
     return (
-      <div className="flex items-center justify-between p-4 border-b bg-white">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('PREV')}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('TODAY')}
-            >
-              Today
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('NEXT')}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <h2 className="text-xl font-semibold">
-            {moment(date).format('MMMM YYYY')}
-          </h2>
+      <div className="flex flex-wrap justify-between items-center mb-4">
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={goToBack}
+            className="p-1.5 rounded-md hover:bg-gray-100"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button
+            onClick={goToNext}
+            className="p-1.5 rounded-md hover:bg-gray-100"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+          <button
+            onClick={goToToday}
+            className="px-3 py-1.5 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
+          >
+            Today
+          </button>
+          <h3 className="text-lg font-medium text-gray-900 ml-2">
+            {toolbar.label}
+          </h3>
         </div>
-
-        <div className="flex items-center space-x-4">
-          {/* Calendar visibility toggle */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Calendars
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {calendars.map((calendar) => (
-                <DropdownMenuItem
-                  key={calendar.id}
-                  onClick={() => toggleCalendarVisibility(calendar.id)}
-                  className="flex items-center justify-between"
-                >
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className="w-3 h-3 rounded"
-                      style={{ backgroundColor: calendar.color }}
-                    />
-                    <span>{calendar.name}</span>
-                  </div>
-                  {visibleCalendars.includes(calendar.id) ? (
-                    <Eye className="h-4 w-4" />
-                  ) : (
-                    <EyeOff className="h-4 w-4" />
-                  )}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* View selector */}
-          <div className="flex items-center space-x-1 border rounded-md">
-            {['month', 'week', 'day', 'agenda'].map((viewName) => (
-              <Button
-                key={viewName}
-                variant={view === viewName ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => onView(viewName as View)}
-                className="rounded-none first:rounded-l-md last:rounded-r-md"
-              >
-                {viewName.charAt(0).toUpperCase() + viewName.slice(1)}
-              </Button>
-            ))}
+        
+        <div className="flex items-center space-x-2 mt-2 sm:mt-0">
+          <div>
+            <button 
+              onClick={() => toolbar.onView('month')}
+              className={`px-3 py-1.5 border text-sm rounded-md ${
+                toolbar.view === 'month' 
+                  ? 'bg-blue-100 border-blue-300 text-blue-800 font-medium'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Month
+            </button>
           </div>
-
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            New Event
-          </Button>
+          <div>
+            <button 
+              onClick={() => toolbar.onView('week')}
+              className={`px-3 py-1.5 border text-sm rounded-md ${
+                toolbar.view === 'week' 
+                  ? 'bg-blue-100 border-blue-300 text-blue-800 font-medium'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Week
+            </button>
+          </div>
+          <div>
+            <button 
+              onClick={() => toolbar.onView('day')}
+              className={`px-3 py-1.5 border text-sm rounded-md ${
+                toolbar.view === 'day' 
+                  ? 'bg-blue-100 border-blue-300 text-blue-800 font-medium'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Day
+            </button>
+          </div>
+          <div>
+            <div className="flex items-center ml-4">
+              <input
+                type="checkbox"
+                id="show-all"
+                checked={showAll}
+                onChange={() => setShowAll(!showAll)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="show-all" className="ml-2 text-sm text-gray-600">
+                Show tasks without dates
+              </label>
+            </div>
+          </div>
         </div>
       </div>
     );
   };
-
+  
+  // Define all needed components in one object
+  const calendarComponents = {
+    toolbar: CustomToolbar,
+    // @ts-ignore - the types don't include 'event' but it works
+    event: ({ event }: unknown) => {
+      const task = event.resource as Task;
+      return (
+        <div className="truncate">
+          {task.completed && '✓ '}
+          {event.title}
+        </div>
+      );
+    },
+    // @ts-ignore - the types don't include 'eventWrapper' but it works
+    eventWrapper: ({ children, event }: unknown) => {
+      const task = event.resource as Task;
+      return (
+        <div title={`${event.title} - ${task.priority} priority`}>
+          {children}
+        </div>
+      );
+    }
+  };
+  
   return (
-    <div className="h-full flex flex-col bg-white">
-      <div className="flex-1 p-6">
-        <Calendar
-          localizer={localizer}
-          events={events}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: 'calc(100vh - 200px)' }}
-          date={currentDate}
-          view={currentView}
-          onNavigate={handleNavigate}
-          onView={handleViewChange}
-          onSelectEvent={handleSelectEvent}
-          eventPropGetter={eventStyleGetter}
-          components={{
-            toolbar: CustomToolbar,
-          }}
-          popup
-          showMultiDayTimes
-          step={15}
-          timeslots={4}
-        />
-      </div>
-
-      {/* Event Details Modal */}
-      <EventModal
-        event={selectedEvent}
-        isOpen={showEventModal}
-        onClose={() => {
-          setShowEventModal(false);
-          setSelectedEvent(null);
+    <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+      <Calendar
+        localizer={localizer}
+        events={events}
+        startAccessor="start"
+        endAccessor="end"
+        style={{ height: 600 }}
+        views={{
+          month: true,
+          week: true,
+          day: true
         }}
-        onEdit={handleEditEvent}
+        view={view}
+        date={date}
+        onView={(newView: unknown) => setView(newView)}
+        onNavigate={(newDate: Date) => setDate(newDate)}
+        components={calendarComponents}
+        eventPropGetter={eventStyleGetter}
+        onSelectEvent={(event: unknown) => {
+          const task = event.resource as Task;
+          if (onTaskSelect) {
+            onTaskSelect(task);
+          }
+        }}
+        popup
+        popupOffset={{ x: 0, y: 10 }}
+        tooltipAccessor={null} // Disable default tooltip
       />
-
-      {/* Task Details Modal */}
-      {showTaskModal && selectedTask && (
-        <TaskDetailsModal
-          task={selectedTask}
-          isOpen={showTaskModal}
-          onClose={() => {
-            setShowTaskModal(false);
-            setSelectedTask(null);
-          }}
-        />
-      )}
+      
+      {/* Legend */}
+      <div className="mt-4 flex flex-wrap gap-4 pt-4 border-t border-gray-200">
+        <div className="flex items-center">
+          <div className="w-4 h-4 mr-2" style={{ backgroundColor: '#10B981', borderRadius: '2px' }}></div>
+          <span className="text-sm text-gray-700">Completed</span>
+        </div>
+        <div className="flex items-center">
+          <div className="w-4 h-4 mr-2" style={{ backgroundColor: '#3B82F6', borderRadius: '2px' }}></div>
+          <span className="text-sm text-gray-700">Upcoming</span>
+        </div>
+        <div className="flex items-center">
+          <div className="w-4 h-4 mr-2" style={{ backgroundColor: '#F97316', borderRadius: '2px' }}></div>
+          <span className="text-sm text-gray-700">High Priority</span>
+        </div>
+        <div className="flex items-center">
+          <div className="w-4 h-4 mr-2" style={{ backgroundColor: '#EF4444', borderRadius: '2px' }}></div>
+          <span className="text-sm text-gray-700">Overdue</span>
+        </div>
+      </div>
     </div>
   );
 };
+
+export default TaskCalendar;

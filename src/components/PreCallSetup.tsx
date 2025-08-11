@@ -1,17 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Video, 
-  VideoOff, 
-  Mic, 
-  MicOff, 
-  Settings, 
-  Phone,
-  Monitor,
-  Camera,
-  Speaker,
-  CheckCircle,
-  AlertCircle
-} from 'lucide-react';
+import { Video, VideoOff, Mic, MicOff, Phone, Camera, Speaker, CheckCircle, AlertCircle } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import Avatar from './ui/Avatar';
 import { getInitials } from '../utils/avatars';
@@ -62,7 +50,7 @@ const PreCallSetup: React.FC<PreCallSetupProps> = ({
     speaker?: string;
   }>({});
   const [previewStream, setPreviewStream] = useState<MediaStream | null>(null);
-  const [isTestingDevices, setIsTestingDevices] = useState(false);
+  const [_isTestingDevices, _setIsTestingDevices] = useState(false);
   const [deviceTests, setDeviceTests] = useState<{
     camera: 'idle' | 'testing' | 'success' | 'error';
     microphone: 'idle' | 'testing' | 'success' | 'error';

@@ -1,22 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Mic, 
-  MicOff, 
-  Video, 
-  VideoOff, 
-  Phone, 
-  MessageSquare, 
-  Users, 
-  Monitor, 
-  MonitorOff,
-  UserPlus,
-  MoreVertical,
-  Settings,
-  Volume2,
-  Shield,
-  Share2,
-  X
-} from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { Mic, MicOff, Video, VideoOff, Phone, MessageSquare, Users, Monitor, MonitorOff, MoreVertical, Share2, X } from 'lucide-react';
 import { useVideoCall } from '../contexts/VideoCallContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useContactStore } from '../store/contactStore';
@@ -27,7 +10,7 @@ interface GroupCallInterfaceProps {
   onClose: () => void;
 }
 
-const GroupCallInterface: React.FC<GroupCallInterfaceProps> = ({ onClose }) => {
+const GroupCallInterface: React.FC<GroupCallInterfaceProps> = ({ _onClose }) => {
   const { 
     participants, 
     localStream, 
@@ -44,12 +27,12 @@ const GroupCallInterface: React.FC<GroupCallInterfaceProps> = ({ onClose }) => {
     sendMessage
   } = useVideoCall();
   
-  const { isDark } = useTheme();
-  const { contacts } = useContactStore();
+  const { _isDark } = useTheme();
+  const { _contacts } = useContactStore();
   
   const [focusedParticipantId, setFocusedParticipantId] = useState<string | null>(null);
   const [layout, setLayout] = useState<'grid' | 'spotlight'>('grid');
-  const [chatOpen, setChatOpen] = useState(false);
+  const [_chatOpen, _setChatOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   const [showParticipantsList, setShowParticipantsList] = useState(false);
   const [activeTab, setActiveTab] = useState<'participants' | 'chat'>('participants');
@@ -57,7 +40,7 @@ const GroupCallInterface: React.FC<GroupCallInterfaceProps> = ({ onClose }) => {
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
   
   // Combined participants (local + remote)
-  const allParticipants = [
+  const allParticipants = useMemo(() => [
     {
       id: 'local',
       name: 'You (Local)',
@@ -68,7 +51,7 @@ const GroupCallInterface: React.FC<GroupCallInterfaceProps> = ({ onClose }) => {
       isConnected: true
     },
     ...participants
-  ];
+  ], [localStream, isVideoEnabled, isAudioEnabled, participants]);
   
   // Set up video refs for each participant
   useEffect(() => {
