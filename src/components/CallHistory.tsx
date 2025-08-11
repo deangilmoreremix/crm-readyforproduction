@@ -1,17 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Phone, 
-  Video, 
-  Clock, 
-  Calendar, 
-  User, 
-  PhoneCall, 
-  PhoneIncoming, 
-  PhoneOutgoing,
-  MoreHorizontal,
-  Trash2,
-  Download
-} from 'lucide-react';
+import { Phone, Video, PhoneCall, PhoneIncoming, PhoneOutgoing, Trash2, Download } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import Avatar from './ui/Avatar';
 import { getInitials } from '../utils/avatars';
@@ -43,7 +31,7 @@ const CallHistory: React.FC = () => {
     if (savedHistory) {
       try {
         const parsed = JSON.parse(savedHistory);
-        setCallHistory(parsed.map((call: any) => ({
+        setCallHistory(parsed.map((call: unknown) => ({
           ...call,
           startTime: new Date(call.startTime),
           endTime: call.endTime ? new Date(call.endTime) : undefined
@@ -105,7 +93,7 @@ const CallHistory: React.FC = () => {
   };
 
   // Add new call to history (this would be called from the video call context)
-  const addCallToHistory = (callData: Omit<CallRecord, 'id'>) => {
+  const _addCallToHistory = (callData: Omit<CallRecord, 'id'>) => {
     const newCall: CallRecord = {
       ...callData,
       id: Date.now().toString()

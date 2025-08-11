@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { useDealStore } from '../store/dealStore';
 import { useContactStore } from '../store/contactStore';
 import { useGemini } from '../services/geminiService';
@@ -32,11 +32,6 @@ import NewLeadsSection from './dashboard/NewLeadsSection';
 import KPICards from './dashboard/KPICards';
 import QuickActions from './dashboard/QuickActions';
 
-// Video call components
-import PersistentVideoCallButton from './PersistentVideoCallButton';
-import VideoCallPreviewWidget from './VideoCallPreviewWidget';
-import VideoCallOverlay from './VideoCallOverlay';
-
 // Memo Dashboard component to prevent unnecessary re-renders
 const Dashboard: React.FC = React.memo(() => {
   const { 
@@ -53,16 +48,40 @@ const Dashboard: React.FC = React.memo(() => {
     isLoading: contactsLoading 
   } = useContactStore();
   
-  const { tasks, fetchTasks } = useTaskStore();
+  const { _tasks, fetchTasks } = useTaskStore();
   const { fetchAppointments } = useAppointmentStore();
-  const { openTool } = useAITools();
-  const { isDark } = useTheme();
+  const { _openTool } = useAITools();
+  const { _isDark } = useTheme();
   const { sectionOrder } = useDashboardLayout();
-  
-  const gemini = useGemini();
+   const _gemini = useGemini();
   
   // Prevent repeated data fetching by using a ref to track initialization
   const initializedRef = useRef(false);
+
+  // Wrap fetch functions in useCallback to prevent dependency issues
+  const memoizedFetchDeals = useCallback(() => {
+    fetchDeals();
+  }, [fetchDeals]);
+
+  const memoizedFetchContacts = useCallback(() => {
+    fetchContacts();
+  }, [fetchContacts]);
+
+  const memoizedFetchTasks = useCallback(() => {
+    try {
+      fetchTasks();
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
+  }, [fetchTasks]);
+
+  const memoizedFetchAppointments = useCallback(() => {
+    try {
+      fetchAppointments();
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+    }
+  }, [fetchAppointments]);
   
   useEffect(() => {
     // Only fetch data once
@@ -70,31 +89,20 @@ const Dashboard: React.FC = React.memo(() => {
     initializedRef.current = true;
     
     // Fetch all data when component mounts
-    fetchDeals();
-    fetchContacts();
-    
-    // Wrap in try/catch to prevent errors from breaking the app
-    try {
-      fetchTasks();
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-    }
-    
-    try {
-      fetchAppointments();
-    } catch (error) {
-      console.error("Error fetching appointments:", error);
-    }
-    
+    memoizedFetchDeals();
+    memoizedFetchContacts();
+    memoizedFetchTasks();
+    memoizedFetchAppointments();
+
     // Set up timer to refresh data periodically
     const intervalId = window.setInterval(() => {
-      fetchDeals();
-      fetchContacts();
+      memoizedFetchDeals();
+      memoizedFetchContacts();
     }, 300000); // Refresh every 5 minutes
 
     // Proper cleanup
     return () => window.clearInterval(intervalId);
-  }, []);
+  }, [memoizedFetchDeals, memoizedFetchContacts, memoizedFetchTasks, memoizedFetchAppointments]);
   
   // Render section content based on section ID
   const renderSectionContent = (sectionId: string) => {
@@ -176,11 +184,6 @@ const Dashboard: React.FC = React.memo(() => {
           </DraggableSection>
         ))}
       </div>
-
-      {/* Video Call Components */}
-      <PersistentVideoCallButton />
-      <VideoCallPreviewWidget />
-      <VideoCallOverlay />
     </main>
   );
 });

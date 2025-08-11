@@ -1,22 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { 
-  Video, 
-  Mic, 
-  MicOff, 
-  VideoOff, 
-  Phone, 
-  PhoneOff, 
-  Minimize2, 
-  Maximize2, 
-  MessageSquare, 
-  Users,
-  Monitor,
-  MonitorOff,
-  Volume2,
-  VolumeX,
-  Settings,
-  MoreVertical
-} from 'lucide-react';
+import { Video, Mic, MicOff, VideoOff, Phone, PhoneOff, Minimize2, Maximize2, MessageSquare, Monitor, MonitorOff, MoreVertical } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useVideoCall } from '../contexts/VideoCallContext';
 import Avatar from './ui/Avatar';
@@ -63,7 +46,7 @@ const VideoCallOverlay = () => {
   const [callDuration, setCallDuration] = useState(0);
   const [showMessaging, setShowMessaging] = useState(false);
   const [showRecording, setShowRecording] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  const [_showSettings, _setShowSettings] = useState(false);
   
   // Use refs with useRef to avoid re-renders when updating refs
   const localVideoRef = useRef<HTMLVideoElement>(null); 

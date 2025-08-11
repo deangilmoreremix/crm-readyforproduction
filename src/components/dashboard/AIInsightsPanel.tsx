@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Brain, Zap, RefreshCw, TrendingUp, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Brain, Zap, RefreshCw, Info, CheckCircle, AlertTriangle, TrendingUp } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAITools } from '../../components/AIToolsProvider';
 import { useDealStore } from '../../store/dealStore';
 import { useContactStore } from '../../store/contactStore';
-import { geminiService } from '../../services/geminiService';
+import { useGemini } from '../../services/geminiService';
 import Avatar from '../ui/Avatar';
 import { getInitials } from '../../utils/avatars';
 
@@ -23,13 +23,14 @@ const AIInsightsPanel = () => {
   const { openTool } = useAITools();
   const { deals } = useDealStore();
   const { contacts } = useContactStore();
+  const { generateContentWithReasoning } = useGemini();
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [apiKeysConfigured, setApiKeysConfigured] = useState(true);
 
   // Create initial insights with the three required categories
-  const createDefaultInsights = (): Insight[] => {
+  const createDefaultInsights = useCallback((): Insight[] => {
     // Get contacts for the insights
     const activeDeals = Object.values(deals).filter(deal => 
       deal.stage !== 'closed-won' && deal.stage !== 'closed-lost'
@@ -58,7 +59,7 @@ const AIInsightsPanel = () => {
     }).filter(Boolean) as Array<{ id: string; name: string; avatar?: string; }>;
 
     // High probability deals
-    const highProbDeals = activeDeals.filter(deal => deal.probability > 70);
+    const highProbDeals = activeDeals.filter(deal => deal.probability && deal.probability > 70);
     const highProbContacts = highProbDeals.map(deal => {
       const contact = contacts[deal.contactId];
       return contact ? {
@@ -97,23 +98,77 @@ const AIInsightsPanel = () => {
         relatedContacts: highProbContacts
       }
     ];
-  };
+  }, [deals, contacts, isDark]);
   
   const [insights, setInsights] = useState<Insight[]>(createDefaultInsights());
 
-  useEffect(() => {
-    // Generate initial insights when component mounts
-    generateInitialInsights();
-  }, []);
+  const generateRealInsights = useCallback(async () => {
+    // Convert to arrays for analysis
+    const dealsArray = Object.values(deals);
+    const contactsArray = Object.values(contacts);
+    
+    // Prepare pipeline data for analysis
+    const pipelineData = {
+      deals: dealsArray.map(deal => ({
+        id: deal.id,
+        title: deal.title,
+        value: deal.value,
+        stage: deal.stage,
+        probability: deal.probability,
+        daysInStage: deal.daysInStage,
+        priority: deal.priority,
+        contactId: deal.contactId
+      })),
+      contacts: contactsArray.map(contact => ({
+        id: contact.id,
+        name: contact.name,
+        company: contact.company,
+        status: contact.status,
+        source: contact.source,
+        tags: contact.tags
+      })),
+      summary: {
+        activeDealCount: dealsArray.filter(d => d.stage !== 'closed-won' && d.stage !== 'closed-lost').length,
+        totalPipelineValue: dealsArray.filter(d => d.stage !== 'closed-won' && d.stage !== 'closed-lost')
+          .reduce((sum, deal) => sum + deal.value, 0),
+        avgDealSize: dealsArray.length > 0 ? 
+          dealsArray.reduce((sum, deal) => sum + deal.value, 0) / dealsArray.length : 0,
+        hotLeadsCount: contactsArray.filter(c => c.status === 'hot').length
+      }
+    };
+    
+    try {
+      // Use generateContentWithReasoning hook to analyze pipeline health
+      const response = await generateContentWithReasoning(
+        "business analysis",
+        "CRM pipeline insights and recommendations",
+        "sales team and management",
+        JSON.stringify(pipelineData, null, 2)
+      );
+      
+      // Reset API keys configured flag if we got a successful result
+      setApiKeysConfigured(true);
 
-  // When theme changes, regenerate default insights to update colors
-  useEffect(() => {
-    setInsights(createDefaultInsights());
-  }, [isDark]);
+      // Get default insights
+      const defaultInsights = createDefaultInsights();
+      
+      // For now, keep the default insights since the service doesn't have pipeline analysis
+      if (response) {
+        console.log('Generated pipeline analysis:', response);
+        setInsights(defaultInsights);
+      }
+      
+    } catch (error) {
+      console.error("Error generating insights:", error);
+      // Set a more user-friendly error message
+      setError("Unable to generate AI insights at this time. Please try again later.");
+      setApiKeysConfigured(false);
+    }
+  }, [deals, contacts, createDefaultInsights]);
 
-  const generateInitialInsights = async () => {
+  const generateInitialInsights = useCallback(async () => {
     // Only generate if we have enough data
-    if (Object.keys(deals).length < 2 || Object.keys(contacts).length < 2 || !geminiService.isApiKeyConfigured()) {
+    if (Object.keys(deals).length < 2 || Object.keys(contacts).length < 2) {
       return;
     }
 
@@ -123,7 +178,17 @@ const AIInsightsPanel = () => {
       console.error("Failed to generate initial insights:", error);
       // Don't set error state for initial load failures
     }
-  };
+  }, [deals, contacts, generateRealInsights]);
+
+  useEffect(() => {
+    // Generate initial insights when component mounts
+    generateInitialInsights();
+  }, [generateInitialInsights]);
+
+  // When theme changes, regenerate default insights to update colors
+  useEffect(() => {
+    setInsights(createDefaultInsights());
+  }, [isDark, createDefaultInsights]);
 
   const generateInsights = async () => {
     setIsGenerating(true);
@@ -170,71 +235,6 @@ const AIInsightsPanel = () => {
         </div>
       </div>
     );
-  };
-
-  const generateRealInsights = async () => {
-    if (!geminiService.isApiKeyConfigured()) {
-      setError("Gemini API key is not configured. Please add VITE_GOOGLE_AI_API_KEY to your environment.");
-      setApiKeysConfigured(false);
-      return;
-    }
-    
-    // Convert to arrays for analysis
-    const dealsArray = Object.values(deals);
-    const contactsArray = Object.values(contacts);
-    
-    // Prepare pipeline data for analysis
-    const pipelineData = {
-      deals: dealsArray.map(deal => ({
-        id: deal.id,
-        title: deal.title,
-        value: deal.value,
-        stage: deal.stage,
-        probability: deal.probability,
-        daysInStage: deal.daysInStage,
-        priority: deal.priority,
-        contactId: deal.contactId
-      })),
-      contacts: contactsArray.map(contact => ({
-        id: contact.id,
-        name: contact.name,
-        company: contact.company,
-        status: contact.status,
-        source: contact.source,
-        tags: contact.tags
-      })),
-      summary: {
-        activeDealCount: dealsArray.filter(d => d.stage !== 'closed-won' && d.stage !== 'closed-lost').length,
-        totalPipelineValue: dealsArray.filter(d => d.stage !== 'closed-won' && d.stage !== 'closed-lost')
-          .reduce((sum, deal) => sum + deal.value, 0),
-        avgDealSize: dealsArray.length > 0 ? 
-          dealsArray.reduce((sum, deal) => sum + deal.value, 0) / dealsArray.length : 0,
-        hotLeadsCount: contactsArray.filter(c => c.status === 'hot').length
-      }
-    };
-    
-    try {
-      // Use geminiService to analyze pipeline health
-      const response = await geminiService.generatePersonalizedMessage(pipelineData, 'email');
-      
-      // Reset API keys configured flag if we got a successful result
-      setApiKeysConfigured(true);
-
-      // Get default insights
-      const defaultInsights = createDefaultInsights();
-      
-      // For now, keep the default insights since the service doesn't have pipeline analysis
-      if (response) {
-        console.log('Generated pipeline analysis:', response);
-        setInsights(defaultInsights);
-      }
-      
-    } catch (error) {
-      console.error("Error generating insights:", error);
-      // Set a more user-friendly error message
-      setError("Unable to generate AI insights at this time. Please try again later.");
-      setApiKeysConfigured(false);
-    }
   };
 
   return (
@@ -297,13 +297,13 @@ const AIInsightsPanel = () => {
             } rounded-xl p-4 hover:${isDark ? 'bg-white/10' : 'bg-gray-50'} transition-all group cursor-pointer`}
             onClick={() => {
               // Open the corresponding AI tool based on insight type
-              const toolMap: Record<string, string> = {
-                'success': 'pipeline-analysis',
-                'warning': 'deal-alerts',
-                'insight': 'smart-insights'
+              const toolMap: Record<string, 'sales-insights' | 'live-deal-analysis' | 'ai-assistant'> = {
+                'success': 'sales-insights',
+                'warning': 'live-deal-analysis',
+                'insight': 'ai-assistant'
               };
               
-              const toolName = toolMap[insight.type] || 'ai-insights';
+              const toolName = toolMap[insight.type] || 'sales-insights';
               openTool(toolName);
             }}
           >

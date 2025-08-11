@@ -1,28 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Video, 
-  Mic, 
-  MicOff, 
-  VideoOff, 
-  Phone, 
-  PhoneOff, 
-  Minimize2, 
-  Maximize2, 
-  MessageSquare, 
-  Users,
-  Monitor,
-  MonitorOff,
-  Volume2,
-  VolumeX,
-  Settings,
-  MoreVertical,
-  X,
-  Plus,
-  UserPlus,
-  Zap,
-  MoreHorizontal,
-  CheckCircle
-} from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Video, Mic, MicOff, VideoOff, Phone, Minimize2, Maximize2, MessageSquare, Users, Monitor, MonitorOff, Volume2, Settings, MoreVertical, X, Plus, Zap, CheckCircle } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useVideoCall } from '../contexts/VideoCallContext';
 import { useContactStore } from '../store/contactStore';
@@ -53,8 +30,8 @@ const VideoCallPreviewWidget = React.memo(() => {
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [showDropdownMenu, setShowDropdownMenu] = useState(false);
   
-  const [localVideoStream, setLocalVideoStream] = useState<MediaStream | null>(null);
-  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const [_localVideoStream, _setLocalVideoStream] = useState<MediaStream | null>(null);
+  const _localVideoRef = useRef<HTMLVideoElement>(null);
 
   // Show preview widget only when not in an actual call
   if (currentCall || callStatus !== 'idle') return null;
@@ -373,13 +350,7 @@ const VideoCallPreviewWidget = React.memo(() => {
 
   return (
     <div className="fixed bottom-6 right-6 z-40 hardware-accelerated contain-layout">
-      <div 
-        className={`backdrop-blur-2xl border rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 ${
-          isDark ? 'bg-gray-900/95 border-white/20' : 'bg-white/95 border-gray-200'
-        } ${
-          isMinimized ? 'w-20 h-20' : 'w-96 h-72'
-        }`}
-      >
+      <div className={`${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-2xl border ${isDark ? 'border-white/20' : 'border-gray-200'} rounded-2xl overflow-hidden shadow-2xl ${isMinimized ? 'w-20 h-20' : 'w-96 h-72'} max-h-[80vh] flex flex-col hardware-accelerated`}>
         {isMinimized ? (
           // Minimized view
           <div 
@@ -628,6 +599,6 @@ const VideoCallPreviewWidget = React.memo(() => {
       </div>
     </div>
   );
-});
+}, (_prevProps, _nextProps) => true); // Always return true to prevent re-renders from parent changes
 
 export default VideoCallPreviewWidget;

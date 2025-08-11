@@ -1,16 +1,11 @@
-import React from 'react';
+
 import { useContactStore } from '../store/contactStore';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import ContactCard from './ContactCard';
 import { Plus } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
-import { Contact } from '../types/contact';
 
-interface LeadsSectionProps {
-  onContactClick?: (contact: Contact) => void;
-}
-
-const LeadsSection: React.FC<LeadsSectionProps> = ({ onContactClick }) => {
+const LeadsSection = () => {
   const { contacts } = useContactStore();
   const { isDark } = useTheme();
   const navigate = useNavigate();
@@ -43,11 +38,7 @@ const LeadsSection: React.FC<LeadsSectionProps> = ({ onContactClick }) => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {newLeads.map((lead) => (
-          <ContactCard 
-            key={lead.id} 
-            contact={lead} 
-            onContactClick={onContactClick}
-          />
+          <ContactCard key={lead.id} contact={lead} />
         ))}
       </div>
     </div>
