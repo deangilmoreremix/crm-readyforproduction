@@ -1,4 +1,5 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { supabase as sharedSupabase } from '../lib/supabase';
 import { Contact } from '../types/contact';
 import { Deal } from '../types';
 
@@ -37,14 +38,8 @@ class SupabaseService {
   private supabase: SupabaseClient<Database>;
 
   constructor() {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Supabase configuration missing. Please check your environment variables.');
-    }
-
-    this.supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+    // Use shared singleton client to avoid multiple GoTrue instances
+    this.supabase = sharedSupabase as unknown as SupabaseClient<Database>;
   }
 
   // Contact methods

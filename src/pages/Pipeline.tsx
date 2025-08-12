@@ -5,7 +5,7 @@ import { useGemini } from '../services/geminiService';
 import { Briefcase, Plus, RefreshCw, Filter, ArrowUp, ArrowDown, X, Calendar, User, AlertCircle, Search, MessageSquare, Zap } from 'lucide-react';
 import { Deal } from '../types';
 import AIEnhancedDealCard from '../components/deals/AIEnhancedDealCard';
-import DealDetail from '../components/DealDetail';
+import { DealDetailView as DealDetail } from '../components/DealDetailView';
 
 // Import KanbanBoard and PipelineStats components if available
 // For the example here, we'll assume they exist
@@ -145,6 +145,9 @@ const Pipeline: React.FC = () => {
     // Also would need more validation
     setShowAddDealModal(false);
   };
+
+  const selectedDealObj = selectedDeal ? deals[selectedDeal] : undefined;
+  const isDetailOpen = showDealDetail && !!selectedDealObj;
   
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -554,10 +557,12 @@ const Pipeline: React.FC = () => {
       )}
       
       {/* Deal Detail Modal */}
-      {showDealDetail && selectedDeal && (
-        <DealDetail 
-          dealId={selectedDeal} 
-          onClose={handleCloseDealDetail} 
+      {isDetailOpen && selectedDealObj && (
+        <DealDetail
+          deal={selectedDealObj}
+          isOpen={isDetailOpen}
+          onClose={handleCloseDealDetail}
+          onUpdate={async () => {}}
         />
       )}
       

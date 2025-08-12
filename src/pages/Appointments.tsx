@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Calendar, Check, ChevronLeft, ChevronRight, Clock, Copy, Link, Mail, MapPin, Phone, Plus, RefreshCw, Search, User, Video, X } from 'lucide-react';
+import { Calendar, Check, ChevronLeft, ChevronRight, Clock, Copy, Link as LinkIcon, Mail, MapPin, Phone, Plus, RefreshCw, Search, User, Video, X } from 'lucide-react';
 import { useAppointmentStore, Appointment, AppointmentType, AppointmentStatus } from '../store/appointmentStore';
 import Select from 'react-select';
 import { Link } from 'react-router-dom';
@@ -973,7 +973,7 @@ const Appointments: React.FC = () => {
                         className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
                         title="Open meeting link"
                       >
-                        <Link size={14} />
+                        <LinkIcon size={14} />
                       </button>
                     </div>
                   </div>

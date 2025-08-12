@@ -1,4 +1,4 @@
-import { Link } from 'lucide-react';
+import { Link as LinkIcon } from 'lucide-react';
 import React from 'react';
 import { Link } from 'react-router-dom';
 

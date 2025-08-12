@@ -1,0 +1,88 @@
+=== PRE-IGNORE STATUS (from earlier step) ===
+Modified: 90
+Untracked: 313
+Total: 529
+
+=== .gitignore (pre-update contents) ===
+node_modules
+dist
+.DS_Store
+server/public
+vite.config.ts.*
+*.tar.gz
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Build artifacts
+*.tsbuildinfo
+.vite/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db
+*.log
+
+# Database files
+*.sqlite
+*.sqlite3
+
+# Replit specific
+.replit
+.config/
+
+=== .gitignore additive lines applied (this session) ===
+build/
+.next/
+out/
+coverage/
+.turbo/
+.parcel-cache/
+.cache/
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.env.development.local
+.env.test.local
+.env.production.local
+.vercel/
+.nyc_output/
+cypress/videos/
+cypress/screenshots/
+playwright-report/
+test-results/
+coverage-final.json
+
+=== POST-IGNORE STATUS SUMMARY ===
+Total: 530
+Modified: 90
+Untracked: 314
+
+=== POST-IGNORE TOP-LEVEL DIRECTORY COUNTS (top 20) ===
+    355 src
+     11 supabase
+      7 public
+      3 packages
+      3 .bolt
+      1 whitelabel
+      1 vite.config.ts
+      1 vite-env.d.ts
+      1 verify-icon-imports.cjs
+      1 verify-cache-fix.sh
+      1 utils
+      1 ui
+      1 types.ts
+      1 types
+      1 tailwind.config.ts
+      1 syntax-recovery.cjs
+      1 styles
+      1 store
+      1 smartcrm_nav_routing_patch.zip
+      1 smart-crm-backup.bundle

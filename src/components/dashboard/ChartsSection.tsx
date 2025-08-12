@@ -146,7 +146,7 @@ const ChartsSection: React.FC = () => {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              <LineChart size={16} className="mr-1.5" />
+              <LineChartIcon size={16} className="mr-1.5" />
               <span>Performance</span>
             </button>
             

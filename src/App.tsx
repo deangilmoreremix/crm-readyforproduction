@@ -1,3 +1,12 @@
+/**
+ * NOTE: This file is not used by the current app entry.
+ * The application mounts ProgressiveApp via main.tsx with BrowserRouter and required providers.
+ * References:
+ * - main.tsx mounts &lt;ProgressiveApp /&gt; (see src/main.tsx)
+ * - ProgressiveApp.tsx defines actual providers and Routes (see src/ProgressiveApp.tsx)
+ *
+ * This file is retained for legacy/reference. Do not modify routing here unless switching the entrypoint.
+ */
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';

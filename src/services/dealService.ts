@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase } from '../lib/supabase';
 import { Deal } from '../types';
 
 // Fetch all deals for the current user

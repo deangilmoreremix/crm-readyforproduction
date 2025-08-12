@@ -249,7 +249,7 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, []);
 
   // Real signaling simulation using localStorage for cross-tab communication
-  const handleSignaling = useCallback((signal: any, isInitiator: boolean) => {
+  const handleSignaling = useCallback((signal: unknown, isInitiator: boolean) => {
     console.log('Handling signaling:', signal.type, 'initiator:', isInitiator);
     
     // For demo purposes, use localStorage to enable cross-tab calling
@@ -495,7 +495,7 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setIsGroupCall(true);
       
       // Get real user media
-      const stream = await getUserMedia(type === 'video', true);
+      await getUserMedia(type === 'video', true);
       
       // Initialize participants
       const initialParticipants = callParticipants.map(p => ({
@@ -648,6 +648,14 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // 4. Set up media streams
   }, [isGroupCall, callStatus]);
 
+  // Reject call
+  const rejectCall = useCallback(() => {
+    console.log('Rejecting call');
+    setCallStatus('ending');
+    setTimeout(() => {
+      cleanup();
+    }, 1000);
+  }, [cleanup]);
   // Accept call with real media
   const acceptCall = useCallback(async () => {
     if (!currentCall) return;
@@ -668,16 +676,8 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       rejectCall();
       throw error;
     }
-  }, [currentCall, getUserMedia, createPeer]);
+  }, [currentCall, getUserMedia, createPeer, rejectCall]);
 
-  // Reject call
-  const rejectCall = useCallback(() => {
-    console.log('Rejecting call');
-    setCallStatus('ending');
-    setTimeout(() => {
-      cleanup();
-    }, 1000);
-  }, [cleanup]);
 
   // End call
   const endCall = useCallback(() => {
@@ -902,9 +902,9 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       }
     }
-  }, [isInCall, localStreamRef, remoteStream]);
+  }, [isScreenSharing, currentCall?.type, getUserMedia]);
 
-  // Start recording function
+  // Real call recording implementation
   const startRecording = useCallback(async () => {
     if (!isInCall || !localStreamRef.current) {
       throw new Error('Cannot start recording: not in call or no local stream');
@@ -1001,7 +1001,6 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [isInCall, remoteStream]);
 
-  // Stop recording function
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
       console.log('Stopping recording...');
@@ -1052,7 +1051,7 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         let packetsReceived = 0;
         let rtt = 0;
 
-        stats.forEach((report: any) => {
+        stats.forEach((report: unknown) => {
           if (report.type === 'inbound-rtp' && report.mediaType === 'video') {
             packetsLost += report.packetsLost || 0;
             packetsReceived += report.packetsReceived || 0;
@@ -1088,13 +1087,6 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const interval = setInterval(monitorConnection, 3000);
     return () => clearInterval(interval);
   }, [isInCall]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      cleanup();
-    };
-  }, [cleanup]);
 
   const value: VideoCallContextType = {
     // Call State

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Link } from 'lucide-react';
+import { ArrowRight, Link as LinkIcon } from 'lucide-react';
 
 interface FeatureCardProps {
   icon: React.ReactNode;

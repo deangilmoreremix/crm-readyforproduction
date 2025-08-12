@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle, Link, Zap } from 'lucide-react';
+import { CheckCircle, Link as LinkIcon, Zap } from 'lucide-react';
 
 interface PricingCardProps {
   tier: string;
