@@ -9,12 +9,15 @@ export interface Contact {
   company?: string;
   position?: string;
   industry?: string;
+  location?: string;
   avatarSrc?: string;
   avatar?: string;
   sources?: string[];
   source?: string;
   interestLevel?: 'hot' | 'medium' | 'low' | 'cold';
-  status: string;
+  status: 'lead' | 'prospect' | 'customer' | 'churned';
+  // Back-compat field used by some views/services
+  lastContact?: string | Date;
   lastConnected?: string;
   notes?: string;
   aiScore?: number;

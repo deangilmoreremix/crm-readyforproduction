@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Contact } from '../types/contact';
+import { Contact } from '../types';
 
 interface ContactState {
   contacts: Record<string, Contact>;
@@ -69,7 +69,7 @@ const mockContacts: Contact[] = [
     company: 'Global Tech Industries',
     industry: 'Manufacturing',
     status: 'customer',
-    interestLevel: 'high',
+  interestLevel: 'hot',
     aiScore: 85,
     avatarSrc: 'https://images.pexels.com/photos/3756679/pexels-photo-3756679.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
     tags: ['enterprise', 'operations', 'loyalty'],

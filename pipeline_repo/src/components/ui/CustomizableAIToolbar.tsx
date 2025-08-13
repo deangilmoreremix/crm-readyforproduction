@@ -1,5 +1,40 @@
 import React, { useState } from 'react';
-import { BarChart3, Mail, TrendingUp, Search, Settings, Plus, Target } from 'lucide-react';
+import {
+  BarChart3,
+  Mail,
+  TrendingUp,
+  Search,
+  Settings,
+  Plus,
+  Target,
+  AlertTriangle,
+  Navigation,
+  FileText,
+  Send,
+  Calendar,
+  DollarSign,
+  Heart,
+  UserPlus,
+  BarChart,
+  Zap,
+  Clock,
+  GitBranch,
+  PenTool,
+  Video,
+  FileSearch,
+  Package,
+  Brain,
+  Phone,
+  MessageSquare,
+  Wand2,
+  Database,
+  Globe,
+  ArrowRight,
+  Activity,
+  CheckCircle,
+  AlertCircle,
+  Sparkles
+} from 'lucide-react';
 
 interface QuickAIButtonProps {
   icon: React.ComponentType<any>;
@@ -61,17 +96,7 @@ const iconMap: Record<string, React.ComponentType<any>> = {
   Sparkles
 };
 
-const toolMapping: Record<string, string> = {
-  'leadScoring': 'business-analyzer',
-  'emailPersonalization': 'email-composer', 
-  'contactEnrichment': 'smart-search',
-  'dealRiskAssessment': 'business-analyzer',
-  'nextBestAction': 'business-analyzer',
-  'proposalGeneration': 'proposal-generator',
-  'businessIntelligence': 'smart-search',
-  'companyHealthScoring': 'business-analyzer',
-  'opportunityIdentification': 'business-analyzer'
-};
+// Removed unused toolMapping to avoid TS 6133 warnings
 
 const defaultQuickActions = [
   { icon: 'BarChart3', label: 'Lead Score', toolName: 'leadScoring', variant: 'primary' },
@@ -129,7 +154,7 @@ export const AIGoalsButton: React.FC<{
   size?: 'sm' | 'md';
   variant?: 'primary' | 'secondary';
   className?: string;
-}> = ({ entityType, entityId, entityData, size = 'sm', variant = 'primary', className = '' }) => {
+}> = ({ size = 'sm', className = '' }) => {
   return (
     <button
       className={`
@@ -151,13 +176,11 @@ export const CustomizableAIToolbar: React.FC<CustomizableAIToolbarProps> = ({
   entityType,
   entityId,
   entityData,
-  location,
-  layout,
   size,
   showCustomizeButton = true
 }) => {
-  const [showCustomizeModal, setShowCustomizeModal] = useState(false);
-  const [customQuickActions, setCustomQuickActions] = useState(defaultQuickActions);
+  const [_showCustomizeModal, setShowCustomizeModal] = useState(false);
+  const [customQuickActions, _setCustomQuickActions] = useState(defaultQuickActions);
 
   return (
     <div className="space-y-3">

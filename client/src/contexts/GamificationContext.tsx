@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useContactStore } from '../store/contactStore';
-import { Contact } from '../types/contact';
+import { Contact } from '../types';
 
 interface Achievement {
   id: string;

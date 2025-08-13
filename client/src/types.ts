@@ -1,23 +1,7 @@
 // Core data types for the Smart CRM application
 
-export interface Contact {
-  id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  company?: string;
-  position?: string;
-  status: 'lead' | 'prospect' | 'customer' | 'churned';
-  score?: number;
-  lastContact?: Date;
-  notes?: string;
-  industry?: string;
-  location?: string;
-  favorite?: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  userId: string;
-}
+// Canonical Contact type is defined in ./types/contact
+export type Contact = import('./types/contact').Contact;
 
 export interface Deal {
   id: string;

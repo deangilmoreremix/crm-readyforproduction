@@ -1,6 +1,7 @@
 // Enhanced OpenAI service with robust contact analysis
 import { ContactEnrichmentData } from './aiEnrichmentService';
-import { Contact } from '../types';
+import { Contact as DomainContact } from '../types';
+type ContactLike = DomainContact;
 
 interface ContactAnalysisResult {
   score: number;
@@ -11,7 +12,7 @@ interface ContactAnalysisResult {
 }
 
 export const useOpenAI = () => {
-  const analyzeContact = async (contact: Contact): Promise<ContactAnalysisResult> => {
+  const analyzeContact = async (contact: ContactLike): Promise<ContactAnalysisResult> => {
     console.log(`🤖 OpenAI analyzing contact: ${contact.name}`);
     
     // Simulate AI processing time (1-3 seconds)
@@ -25,7 +26,7 @@ export const useOpenAI = () => {
     const opportunities: string[] = [];
 
     // Interest level scoring
-    switch (contact.interestLevel) {
+  switch ((contact as any).interestLevel) {
       case 'hot':
         score += 35;
         insights.push('High interest level indicates strong buying intent');
@@ -57,7 +58,7 @@ export const useOpenAI = () => {
     const mediumValueSources = ['Website', 'Email'];
     const lowValueSources = ['Cold Call', 'Facebook'];
 
-    contact.sources?.forEach((source: string) => {
+  (contact as any).sources?.forEach((source: string) => {
       if (highValueSources.includes(source)) {
         score += 15;
         insights.push(`${source} source indicates higher quality lead`);
@@ -75,12 +76,12 @@ export const useOpenAI = () => {
     const seniorTitles = ['CEO', 'CTO', 'VP', 'Director', 'President', 'Head of'];
     const managerTitles = ['Manager', 'Lead', 'Senior'];
     
-    if (seniorTitles.some(title => contact.title?.includes(title))) {
+  if (seniorTitles.some(title => (contact as any).title?.includes(title))) {
       score += 20;
       insights.push('Senior-level title indicates decision-making authority');
       opportunities.push('Direct access to decision maker');
       recommendations.push('Tailor messaging for executive-level concerns');
-    } else if (managerTitles.some(title => contact.title?.includes(title))) {
+  } else if (managerTitles.some(title => (contact as any).title?.includes(title))) {
       score += 10;
       insights.push('Management-level role suggests influence in decision process');
       recommendations.push('Identify and connect with ultimate decision maker');
@@ -94,7 +95,7 @@ export const useOpenAI = () => {
     const highValueIndustries = ['Technology', 'Finance', 'Healthcare', 'Software'];
     const mediumValueIndustries = ['Manufacturing', 'Consulting', 'Marketing'];
     
-    if (contact.industry && highValueIndustries.includes(contact.industry)) {
+  if ((contact as any).industry && highValueIndustries.includes((contact as any).industry)) {
       score += 15;
       insights.push(`${contact.industry} industry typically has higher budget for solutions`);
       opportunities.push('Industry shows strong growth potential');
@@ -104,7 +105,7 @@ export const useOpenAI = () => {
     }
 
     // Engagement scoring based on notes/interactions
-    if (contact.notes && contact.notes.length > 100) {
+  if ((contact as any).notes && (contact as any).notes.length > 100) {
       score += 12;
       insights.push('Detailed interaction history indicates active engagement');
       opportunities.push('Strong engagement history suggests higher conversion probability');
@@ -118,7 +119,7 @@ export const useOpenAI = () => {
     }
 
     // Social presence analysis
-    if (contact.socialProfiles?.linkedin) {
+  if ((contact as any).socialProfiles?.linkedin) {
       score += 8;
       insights.push('LinkedIn presence indicates professional engagement');
       recommendations.push('Connect on LinkedIn for relationship building');
@@ -128,7 +129,7 @@ export const useOpenAI = () => {
     const largeCorp = ['Microsoft', 'Google', 'Apple', 'Amazon', 'Facebook', 'Oracle'];
     const mediumCorp = ['Salesforce', 'Adobe', 'Netflix', 'Spotify'];
     
-    if (largeCorp.some(corp => contact.company?.includes(corp))) {
+  if (largeCorp.some(corp => (contact as any).company?.includes(corp))) {
       score += 25;
       insights.push('Large enterprise indicates substantial budget and scaling needs');
       opportunities.push('Enterprise-level deal potential');
@@ -150,7 +151,11 @@ export const useOpenAI = () => {
     }
 
     // Recent activity boost
-    const lastUpdate = new Date(contact.updatedAt || contact.createdAt);
+  const updatedAt: any = (contact as any).updatedAt;
+  const createdAt: any = (contact as any).createdAt;
+  const updatedDate = updatedAt ? new Date(updatedAt) : undefined;
+  const createdDate = createdAt ? new Date(createdAt) : undefined;
+  const lastUpdate = updatedDate || createdDate || new Date();
     const daysSinceUpdate = Math.floor((Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24));
     
     if (daysSinceUpdate <= 7) {
@@ -191,7 +196,7 @@ export const useOpenAI = () => {
       riskFactors.unshift('Low initial scoring suggests challenging conversion');
     }
 
-    console.log(`✅ Analysis complete for ${contact.name}: Score ${score}`);
+  console.log(`✅ Analysis complete for ${contact.name}: Score ${score}`);
 
     return {
       score,
@@ -202,12 +207,12 @@ export const useOpenAI = () => {
     };
   };
 
-  const generateEmailTemplate = async (contact: Contact, purpose: string) => {
+  const generateEmailTemplate = async (contact: ContactLike, purpose: string) => {
     await new Promise(resolve => setTimeout(resolve, 800));
     
     return {
-      subject: `Following up on ${purpose} - ${contact.company}`,
-      body: `Hi ${contact.firstName || contact.name.split(' ')[0]},\n\nI hope this email finds you well. I wanted to follow up on our recent conversation regarding ${purpose}.\n\nBased on your role as ${contact.title} at ${contact.company}, I believe our solution could provide significant value...\n\nBest regards,\nYour Sales Team`
+  subject: `Following up on ${purpose} - ${(contact as any).company}`,
+  body: `Hi ${(contact as any).firstName || contact.name.split(' ')[0]},\n\nI hope this email finds you well. I wanted to follow up on our recent conversation regarding ${purpose}.\n\nBased on your role as ${(contact as any).title} at ${(contact as any).company}, I believe our solution could provide significant value...\n\nBest regards,\nYour Sales Team`
     };
   };
 
@@ -245,13 +250,13 @@ export const useOpenAI = () => {
     };
   };
 
-  const generateContactSummary = async (contact: Contact): Promise<string> => {
+  const generateContactSummary = async (contact: ContactLike): Promise<string> => {
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    return `${contact.name} is a ${contact.title} at ${contact.company} with ${contact.interestLevel} interest level. Key focus areas include business growth and strategic partnerships. Last interaction was positive with strong engagement indicators.`;
+  return `${contact.name} is a ${(contact as any).title} at ${(contact as any).company} with ${(contact as any).interestLevel} interest level. Key focus areas include business growth and strategic partnerships. Last interaction was positive with strong engagement indicators.`;
   };
 
-  const suggestNextActions = async (contact: Contact): Promise<string[]> => {
+  const suggestNextActions = async (contact: ContactLike): Promise<string[]> => {
     await new Promise(resolve => setTimeout(resolve, 800));
     
     const actions = [

@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { useApiStore } from '../store/apiStore';
-import { Contact, Deal } from '../types';
+import { Deal, Contact as ContactLike } from '../types';
 
 export const useOpenAIEmbeddings = () => {
   const { apiKeys } = useApiStore();
@@ -66,7 +66,7 @@ export const useOpenAIEmbeddings = () => {
   };
 
   // Create embeddings for multiple contacts to enable semantic search
-  const createContactEmbeddings = async (contacts: Contact[]) => {
+  const createContactEmbeddings = async (contacts: ContactLike[]) => {
     try {
       const embeddings: { contactId: string, embedding: number[] }[] = [];
       
@@ -74,13 +74,13 @@ export const useOpenAIEmbeddings = () => {
         // Create a text representation of the contact
         const contactText = `
           Name: ${contact.name}
-          Email: ${contact.email}
-          Company: ${contact.company || ''}
-          Position: ${contact.position || ''}
-          Industry: ${contact.industry || ''}
-          Status: ${contact.status}
-          Notes: ${contact.notes || ''}
-          Location: ${contact.location || ''}
+          Email: ${(contact as any).email}
+          Company: ${(contact as any).company || ''}
+          Position: ${(contact as any).position || ''}
+          Industry: ${(contact as any).industry || ''}
+          Status: ${(contact as any).status}
+          Notes: ${(contact as any).notes || ''}
+          Location: ${(contact as any).location || ''}
         `;
         
         const embedding = await createEmbedding(contactText);
@@ -135,11 +135,11 @@ export const useOpenAIEmbeddings = () => {
   
   // Calculate cosine similarity between two vectors
   const cosineSimilarity = (vecA: number[], vecB: number[]) => {
-    const dotProduct = 0;;
-    const normA = 0;;
-    const normB = 0;;
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
     
-    for (const i = 0; i < vecA.length; i++) {
+    for (let i = 0; i < vecA.length; i++) {
       dotProduct += vecA[i] * vecB[i];
       normA += vecA[i] * vecA[i];
       normB += vecB[i] * vecB[i];
@@ -149,7 +149,7 @@ export const useOpenAIEmbeddings = () => {
   };
   
   // Perform semantic search on contacts
-  const searchContacts = async (query: string, contactEmbeddings: { contactId: string, embedding: number[] }[], contactsById: Record<string, Contact>) => {
+  const searchContacts = async (query: string, contactEmbeddings: { contactId: string, embedding: number[] }[], contactsById: Record<string, ContactLike>) => {
     try {
       // Create embedding for the query
       const queryEmbedding = await createEmbedding(query);

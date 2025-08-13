@@ -2192,3 +2192,5 @@ Sales Approach: ${companyData.salesApproach}
     </div>
   );
 };
+
+export default DealDetailView;

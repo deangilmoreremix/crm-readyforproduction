@@ -491,11 +491,7 @@ const Pipeline: React.FC = () => {
                                         showAnalyzeButton={true}
                                         onAnalyze={handleAnalyzeDeal}
                                         onAIEnrich={handleEnrichDeal}
-                                        onAIEnrich={handleEnrichDeal}
                                         isAnalyzing={analyzingDealId === deal.id}
-                                        onToggleFavorite={handleToggleFavorite}
-                                        onFindNewImage={handleFindNewImage}
-                                        onAIEnrich={handleEnrichDeal}
                                         isEnriching={enrichingDealId === deal.id}
                                         onToggleFavorite={handleToggleFavorite}
                                         onFindNewImage={handleFindNewImage}

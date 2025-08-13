@@ -1,4 +1,4 @@
-import { Contact, Deal } from '../types';
+import { Deal, Contact as ContactLike } from '../types';
 import { intelligentModelSelector, AITask, CustomerProfile } from './ai/intelligentModelSelector';
 
 // Interface for API options
@@ -137,7 +137,7 @@ const generateTextMessage = async (
 
 // Call script generation with intelligent model selection
 export const generateCallScript = async (
-  contact: Partial<Contact>, 
+  contact: Partial<ContactLike>, 
   callPurpose: string, 
   previousInteractions: string[],
   customerProfile?: CustomerProfile
@@ -230,7 +230,7 @@ export const generateSalesForecast = async (
 
 // Proposal generator
 const generateProposal = async (
-  contact: Partial<Contact>, 
+  contact: Partial<ContactLike>, 
   dealDetails: string, 
   previousInteractions: string[]
 ): Promise<string> => {
@@ -292,7 +292,7 @@ export const analyzeBusinessData = async (
 
 // Sales insights generation
 export const generateSalesInsights = async (
-  contacts: Partial<Contact>[], 
+  contacts: Partial<ContactLike>[], 
   deals: Partial<Deal>[]
 ): Promise<string> => {
   try {

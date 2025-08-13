@@ -1,5 +1,29 @@
 import React, { useState } from 'react';
-import { Settings, Plus, LucideIcon } from 'lucide-react';
+import {
+  Settings,
+  Plus,
+  LucideIcon,
+  BarChart3,
+  Mail,
+  TrendingUp,
+  AlertTriangle,
+  Navigation,
+  FileText,
+  Send,
+  Calendar,
+  DollarSign,
+  Heart,
+  UserPlus,
+  Search,
+  BarChart,
+  Zap,
+  Clock,
+  GitBranch,
+  PenTool,
+  Video,
+  FileSearch,
+  Package
+} from 'lucide-react';
 import { useCustomizationStore, CustomizationLocation } from '../../store/customizationStore';
 import { getGoalById } from '../../data/aiGoals';
 import AIGoalsButton from './AIGoalsButton';
@@ -17,6 +41,8 @@ interface CustomizableAIToolbarProps {
   showGoalsButton?: boolean;
   showCustomizeButton?: boolean;
 }
+
+type Variant = 'default' | 'analysis' | 'generation' | 'research' | 'automation';
 
 const CustomizableAIToolbar: React.FC<CustomizableAIToolbarProps> = ({
   entityType,
@@ -50,7 +76,7 @@ const CustomizableAIToolbar: React.FC<CustomizableAIToolbarProps> = ({
     icon: LucideIcon;
     label: string;
     toolName: string;
-    variant: string;
+    variant: Variant;
   }>;
 
   const getLayoutClasses = () => {
@@ -106,7 +132,7 @@ const CustomizableAIToolbar: React.FC<CustomizableAIToolbarProps> = ({
                   entityId={entityId}
                   entityData={entityData}
                   size={size}
-                  variant={action.variant as unknown}
+                  variant={action.variant}
                   className="w-full justify-center text-center"
                 />
               ))}
@@ -186,7 +212,7 @@ const CustomizableAIToolbar: React.FC<CustomizableAIToolbarProps> = ({
           entityId={entityId}
           entityData={entityData}
           size={size}
-          variant={action.variant as unknown}
+          variant={action.variant}
           className={layout === 'vertical' ? 'w-full' : ''}
         />
       ))}
@@ -244,24 +270,24 @@ function getIconComponent(iconName: string): LucideIcon {
 }
 
 // Helper function to get variant based on category
-function getVariantForCategory(category: string): string {
+function getVariantForCategory(category: string): Variant {
   switch (category) {
     case 'Sales':
-      return 'analysis';
+  return 'analysis';
     case 'Marketing':
-      return 'generation';
+  return 'generation';
     case 'Relationship':
-      return 'research';
+  return 'research';
     case 'Analytics':
-      return 'analysis';
+  return 'analysis';
     case 'Automation':
-      return 'default';
+  return 'default';
     case 'Content':
-      return 'generation';
+  return 'generation';
     case 'AI-Native':
-      return 'research';
+  return 'research';
     default:
-      return 'default';
+  return 'default';
   }
 }
 

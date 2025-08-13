@@ -1,5 +1,5 @@
 // AI Service for Express API endpoints (replacing Supabase Edge Functions)
-import { Contact, Deal } from '../types';
+import { Deal, Contact as ContactLike } from '../types';
 
 const API_BASE = '';
 
@@ -47,7 +47,7 @@ export const generateTextMessage = async (contactName: string, purpose: string):
 
 // Call script generation
 export const generateCallScript = async (
-  contact: Partial<Contact>, 
+  contact: Partial<ContactLike>, 
   callPurpose: string, 
   previousInteractions: string[]
 ): Promise<string> => {
@@ -63,7 +63,7 @@ export const generateCallScript = async (
 
 // Proposal generation
 export const generateProposal = async (
-  contact: Partial<Contact>, 
+  contact: Partial<ContactLike>, 
   dealDetails: string, 
   previousInteractions: string[]
 ): Promise<string> => {
@@ -149,7 +149,7 @@ export const analyzeBusinessData = async (
 
 // Sales insights generation
 export const generateSalesInsights = async (
-  contacts: Partial<Contact>[], 
+  contacts: Partial<ContactLike>[], 
   deals: Partial<Deal>[]
 ): Promise<string> => {
   return apiRequest('sales-insights', { contacts, deals });

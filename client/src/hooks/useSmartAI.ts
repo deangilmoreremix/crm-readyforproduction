@@ -3,9 +3,8 @@
  * Provides easy access to enhanced AI capabilities with automatic model selection
  */
 
-import { useCallback } from 'react';
-import { useGemini } from '../services/geminiService';
-import { Contact } from '../types/contact';
+import { useCallback, useState } from 'react';
+import { Contact } from '../types';
 import { smartAIService } from '../services/smartAIService';
 
 // Define types for task optimization

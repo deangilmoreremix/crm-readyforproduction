@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useOpenAI } from '../services/openaiService';
-import { useGemini } from '../services/geminiService';
-import { useContactStore } from '../store/contactStore';
-import { Contact } from '../types';
-import CustomizableAIToolbar from '../components/ai/CustomizableAIToolbar';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useOpenAI } from '../client/src/services/openaiService';
+import { useGemini } from '../client/src/services/geminiService';
+import { useContactStore } from '../client/src/store/contactStore';
+import type { Contact } from '../client/src/types';
+import CustomizableAIToolbar from '../client/src/components/ai/CustomizableAIToolbar';
 import { 
   Mail, 
   Phone, 
@@ -60,7 +60,8 @@ const ContactDetail: React.FC = () => {
       setIsLoading(false);
     } else if (id) {
       // If not in store yet (e.g., direct URL access), set a mock contact for demo
-      const mockContact: Contact = {
+      const now = new Date();
+  const mockContact: Contact = {
         id: id,
         name: 'John Doe',
         email: 'john.doe@example.com',
@@ -68,11 +69,15 @@ const ContactDetail: React.FC = () => {
         company: 'Acme Inc',
         position: 'CTO',
         status: 'customer',
-        score: 85,
-        lastContact: new Date('2023-06-15'),
+        aiScore: 85,
+        // Store contact type may use lastConnected (string). We'll keep both-friendly values where used.
         notes: 'Interested in enterprise plan',
         industry: 'Technology',
-        location: 'San Francisco, CA'
+        location: 'San Francisco, CA',
+        isFavorite: false,
+        tags: ['demo'],
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString()
       };
       
       setContact(mockContact);
@@ -139,8 +144,14 @@ const ContactDetail: React.FC = () => {
     setLeadScoreError(null);
     
     try {
-      const result = await openai.predictLeadScore(contact);
-      setLeadScoreResult(result);
+      // Analyze contact using OpenAI service (returns a structured result)
+  const analysis = await openai.analyzeContact(contact);
+      const summary = [
+        `Score: ${analysis.score}/100`,
+        analysis.insights?.length ? `Insights:\n- ${analysis.insights.join('\n- ')}` : '',
+        analysis.recommendations?.length ? `Recommendations:\n- ${analysis.recommendations.join('\n- ')}` : ''
+      ].filter(Boolean).join('\n\n');
+      setLeadScoreResult(summary);
     } catch (err) {
       setLeadScoreError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
@@ -155,7 +166,7 @@ const ContactDetail: React.FC = () => {
     setPersonalizationError(null);
     
     try {
-      const result = await gemini.suggestPersonalization(contact, previousInteractions);
+  const result = await gemini.suggestPersonalization(contact);
       setPersonalizationResult(result);
     } catch (err) {
       setPersonalizationError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -441,9 +452,14 @@ const ContactDetail: React.FC = () => {
                     <div className="flex items-center">
                       <Calendar className="h-5 w-5 text-gray-400 mr-3" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {contact.lastContact ? contact.lastContact.toLocaleDateString() : 'Never contacted'}
-                        </p>
+                        {(() => {
+                          const raw = (contact as any).lastContact || (contact as any).lastConnected;
+                          const d = raw ? new Date(raw) : null;
+                          const text = d && !isNaN(d.getTime()) ? d.toLocaleDateString() : 'Never contacted';
+                          return (
+                            <p className="text-sm font-medium text-gray-900">{text}</p>
+                          );
+                        })()}
                         <p className="text-xs text-gray-500">Last Contact</p>
                       </div>
                     </div>
@@ -480,7 +496,7 @@ const ContactDetail: React.FC = () => {
                     <div className="flex items-center">
                       <Flag className="h-5 w-5 text-gray-400 mr-3" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{contact.score || 'N/A'}/100</p>
+                        <p className="text-sm font-medium text-gray-900">{(contact as any).aiScore ?? 'N/A'}/100</p>
                         <p className="text-xs text-gray-500">Lead Score</p>
                       </div>
                     </div>
