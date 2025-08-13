@@ -15,7 +15,6 @@ export default function Navbar() {
           <NavLink to="/dashboard" className={({isActive})=> `${base} ${isActive?active:idle}`}>Dashboard</NavLink>
           <NavLink to="/contacts" className={({isActive})=> `${base} ${isActive?active:idle}`}>Contacts</NavLink>
           <NavLink to="/pipeline" className={({isActive})=> `${base} ${isActive?active:idle}`}>Pipeline</NavLink>
-          <NavLink to="/ai-goals" className={({isActive})=> `${base} ${isActive?active:idle}`}>AI Goals</NavLink>
           <button onClick={()=>setOpen(true)} className={`${base} ${idle}`}>Research</button>
         </div>
       </div>
