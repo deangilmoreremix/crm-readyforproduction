@@ -14,6 +14,7 @@ import Navbar from './components/layout/Navbar';
 import Dashboard from './components/Dashboard';
 import Pipeline from './pages/Pipeline';
 import Contacts from './pages/Contacts';
+import AIGoalsPage from './pages/AIGoalsPage';
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/pipeline" element={<Pipeline />} />
                       <Route path="/contacts" element={<Contacts />} />
+                      <Route path="/ai-goals" element={<AIGoalsPage />} />
                       <Route path="*" element={<Dashboard />} />
                     </Routes>
                   </div>

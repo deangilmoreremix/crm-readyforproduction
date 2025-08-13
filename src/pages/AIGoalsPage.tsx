@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Goal } from '../types/goals';
-import InteractiveGoalExplorer from '../components/InteractiveGoalExplorer';
-import GoalExecutionModal from '../components/GoalExecutionModal';
-import { Button } from '../components/ui/button';
-import { Card, CardContent } from '../components/ui/card';
-import { Brain, Info, ArrowLeft, Target, Users, BarChart3, Bot, Activity, Zap } from 'lucide-react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Goal } from '../../types/goals';
+import InteractiveGoalExplorer from '../../components/InteractiveGoalExplorer';
+import GoalExecutionModal from '../../components/GoalExecutionModal';
+import { Button } from '../../components/ui/button';
+import { Card, CardContent, CardHeader } from '../../components/ui/card';
+import { Brain, Zap, Target, Users, Bot, Activity } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAITools } from '../../components/AIToolsProvider';
 
 // Define context type
 interface AIGoalContext {
@@ -15,15 +16,16 @@ interface AIGoalContext {
   id?: string;
 }
 
-export function AIGoalsPage() {
+const AIGoalsPage: React.FC = () => {
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [showExecutionModal, setShowExecutionModal] = useState(false);
   const [realMode, setRealMode] = useState(false);
   
   const navigate = useNavigate();
+  const { openTool } = useAITools();
   
   // Get context from session storage or URL params
-  const [context] = useState<AIGoalContext | null>(() => {
+  const [context, setContext] = useState<AIGoalContext | null>(() => {
     try {
       const savedContext = sessionStorage.getItem('currentEntityContext');
       return savedContext ? JSON.parse(savedContext) : null;
@@ -32,289 +34,400 @@ export function AIGoalsPage() {
     }
   });
 
-  const handleGoalSelected = (goal: Goal) => {
+  // Filter goals based on current criteria
+  useEffect(() => {
+    let filtered = aiGoals;
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      filtered = searchGoals(searchQuery);
+    }
+
+    // Apply category filter
+    if (selectedCategory !== 'All') {
+      filtered = filtered.filter(goal => goal.category === selectedCategory);
+    }
+
+    // Apply priority filter
+    if (selectedPriority !== 'All') {
+      filtered = filtered.filter(goal => goal.priority === selectedPriority);
+    }
+
+    // Apply complexity filter
+    if (selectedComplexity !== 'All') {
+      filtered = filtered.filter(goal => goal.complexity === selectedComplexity);
+    }
+
+    setFilteredGoals(filtered);
+  }, [searchQuery, selectedCategory, selectedPriority, selectedComplexity]);
+
+  const handleExecuteGoal = (goal: Goal) => {
     setSelectedGoal(goal);
-    setShowExecutionModal(true);
+    setIsExecutionModalOpen(true);
+    
+    // Show notification about demo mode
+    if (!realMode) {
+      setTimeout(() => {
+        console.log('💡 Tip: Switch to Live Mode above to execute real AI agents instead of demos');
+      }, 1000);
+    }
   };
 
-  const handleModeToggle = (mode: boolean) => {
-    setRealMode(mode);
-  };
-
-  const handleCloseModal = () => {
-    setShowExecutionModal(false);
+  const handleCloseExecutionModal = () => {
+    setIsExecutionModalOpen(false);
     setSelectedGoal(null);
   };
 
-  const handleGoalComplete = (result: unknown) => {
-    console.log('Goal execution completed:', result);
+  const getCategoryIcon = (category: string) => {
+    const iconMap: { [key: string]: React.ReactNode } = {
+      'Sales': <TrendingUp className="h-5 w-5" />,
+      'Marketing': <Target className="h-5 w-5" />,
+      'Relationship': <Users className="h-5 w-5" />,
+      'Automation': <Zap className="h-5 w-5" />,
+      'Analytics': <Activity className="h-5 w-5" />,
+      'Content': <FileText className="h-5 w-5" />,
+      'Admin': <Settings className="h-5 w-5" />,
+      'AI-Native': <Brain className="h-5 w-5" />
+    };
+    return iconMap[category] || <Bot className="h-5 w-5" />;
   };
 
+  const getCategoryColor = (category: string): string => {
+    const colorMap: { [key: string]: string } = {
+      'Sales': 'from-blue-500 to-blue-600',
+      'Marketing': 'from-purple-500 to-purple-600',
+      'Relationship': 'from-green-500 to-green-600',
+      'Automation': 'from-orange-500 to-orange-600',
+      'Analytics': 'from-teal-500 to-teal-600',
+      'Content': 'from-yellow-500 to-yellow-600',
+      'Admin': 'from-indigo-500 to-indigo-600',
+      'AI-Native': 'from-pink-500 to-pink-600'
+    };
+    return colorMap[category] || 'from-gray-500 to-gray-600';
+  };
+
+  const getGoalsByCurrentCategory = () => {
+    return selectedCategory === 'All' ? aiGoals : getGoalsByCategory(selectedCategory);
+  };
+
+  const categoryStats = goalCategories.map(category => ({
+    name: category.name,
+    id: category.id,
+    count: getGoalsByCategory(category.id).length,
+    icon: getCategoryIcon(category.id),
+    color: getCategoryColor(category.id)
+  }));
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-bounce" style={{ animationDuration: '6s' }}></div>
-        <div className="absolute top-40 right-20 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl animate-bounce" style={{ animationDuration: '8s', animationDelay: '2s' }}></div>
-        <div className="absolute bottom-20 left-1/3 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl animate-bounce" style={{ animationDuration: '10s', animationDelay: '4s' }}></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                AI Business Goals
+              </h1>
+              <p className="text-lg text-gray-600 mb-4">
+                Transform your business with AI-powered automation. Choose from {aiGoals.length} pre-built goals across {goalCategories.length} categories.
+              </p>
+              
+              {/* Mode Toggle with Enhanced UX */}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Execution Mode:</span>
+                  <div className="flex bg-gray-100 rounded-lg p-1">
+                    <button
+                      onClick={() => setRealMode(false)}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        !realMode ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      🎭 Demo Mode
+                    </button>
+                    <button
+                      onClick={() => setRealMode(true)}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        realMode ? 'bg-white text-green-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      🚀 Live Mode
+                    </button>
+                  </div>
+                </div>
+                
+                {realMode ? (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm text-green-700 font-medium">Real AI execution enabled</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-lg">
+                    <span className="text-sm text-blue-700">Demo mode - Click Live Mode for real execution</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Quick Stats */}
+            <div className="grid grid-cols-3 gap-4 mt-6 lg:mt-0">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{aiGoals.length}</div>
+                <div className="text-sm text-gray-600">AI Goals</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{goalCategories.length}</div>
+                <div className="text-sm text-gray-600">Categories</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600">50+</div>
+                <div className="text-sm text-gray-600">AI Agents</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="relative z-10">
-        {/* Massive Header Section */}
-        <div className="text-center py-16 px-4 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 backdrop-blur-sm"></div>
-          <div className="relative z-10 max-w-6xl mx-auto">
-            <div className="flex items-center justify-center gap-4 mb-6">
-              <div className="p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-2xl">
-                <Brain className="h-12 w-12 text-white animate-pulse" />
+      {/* Category Overview */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
+          {categoryStats.map((category) => (
+            <button
+              key={category.name}
+              onClick={() => setSelectedCategory(category.id)}
+              className={`p-4 rounded-xl border transition-all duration-300 hover:scale-105 ${
+                selectedCategory === category.id
+                  ? `bg-gradient-to-r ${category.color} text-white border-transparent shadow-lg`
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:shadow-md'
+              }`}
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className={`mb-2 ${selectedCategory === category.id ? 'text-white' : 'text-gray-600'}`}>
+                  {category.icon}
+                </div>
+                <div className="text-sm font-medium">{category.name}</div>
+                <div className={`text-xs ${selectedCategory === category.id ? 'text-white/80' : 'text-gray-500'}`}>
+                  {category.count} goals
+                </div>
               </div>
-              <h1 className="text-6xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                AI Goals Center
-              </h1>
+            </button>
+          ))}
+        </div>
+
+        {/* Search and Filters */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search AI goals, agents, or tools..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
             
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Transform business objectives into automated AI workflows
-            </p>
-
-            <div className="flex items-center justify-center gap-4 mb-8">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => navigate('/dashboard')}
-                className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm hover:bg-white/70 dark:hover:bg-slate-700/70 transition-all duration-300"
+            {/* Filter Toggle */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              <Filter className="h-5 w-5" />
+              Filters
+              <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {/* View Mode Toggle */}
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-md transition-colors ${
+                  viewMode === 'grid' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+                }`}
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Dashboard
-              </Button>
-            </div>
-
-            {/* How AI Goals Work Section */}
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">How AI Goals Work</h2>
-              <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-4xl mx-auto">
-                Each goal triggers a specialized AI agent team that executes real business actions. Watch as multiple agents collaborate to achieve measurable outcomes in your CRM.
-              </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-slate-700/50 shadow-xl">
-                  <div className="flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900/50 rounded-xl mb-4 mx-auto">
-                    <Target className="h-8 w-8 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">Set Goals</h3>
-                  <p className="text-gray-600 dark:text-gray-400">Choose from 58+ pre-built business objectives</p>
-                </div>
-                
-                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-slate-700/50 shadow-xl">
-                  <div className="flex items-center justify-center w-16 h-16 bg-purple-100 dark:bg-purple-900/50 rounded-xl mb-4 mx-auto">
-                    <Bot className="h-8 w-8 text-purple-600" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">AI Execution</h3>
-                  <p className="text-gray-600 dark:text-gray-400">17 specialized agents work together automatically</p>
-                </div>
-                
-                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-slate-700/50 shadow-xl">
-                  <div className="flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900/50 rounded-xl mb-4 mx-auto">
-                    <BarChart3 className="h-8 w-8 text-green-600" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">Measure Results</h3>
-                  <p className="text-gray-600 dark:text-gray-400">Track real business impact and ROI</p>
-                </div>
-              </div>
-            </div>
-
-            {/* System Status Dashboard */}
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">System Status</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-slate-700/50 shadow-xl">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Activity className="h-8 w-8 text-blue-600 animate-pulse" />
-                    <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">17</div>
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">AI Agents</div>
-                  <div className="text-xs text-green-600 dark:text-green-400">Active</div>
-                </div>
-                
-                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-slate-700/50 shadow-xl">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Target className="h-8 w-8 text-purple-600" />
-                    <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">58+</div>
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">Available Goals</div>
-                  <div className="text-xs text-blue-600 dark:text-blue-400">Ready to execute</div>
-                </div>
-                
-                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-slate-700/50 shadow-xl">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Zap className="h-8 w-8 text-yellow-600" />
-                    <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">8</div>
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">Categories</div>
-                  <div className="text-xs text-purple-600 dark:text-purple-400">Types</div>
-                </div>
-                
-                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-slate-700/50 shadow-xl">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Users className="h-8 w-8 text-green-600" />
-                    <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">98.5%</div>
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">Success Rate</div>
-                  <div className="text-xs text-green-600 dark:text-green-400">Verified</div>
-                </div>
-              </div>
+                <Grid3X3 className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-md transition-colors ${
+                  viewMode === 'list' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+                }`}
+              >
+                <List className="h-5 w-5" />
+              </button>
             </div>
           </div>
-        </div>
-
-        {/* Interactive AI Goal Explorer Header */}
-        <div className="max-w-7xl mx-auto px-6 mb-8">
-          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl border border-white/50 dark:border-slate-700/50 shadow-2xl p-8">
-            <div className="text-center mb-8">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <div className="px-3 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-full text-sm font-medium">AI-Powered</div>
-                <div className="px-3 py-1 bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 rounded-full text-sm font-medium">Real-Time Execution</div>
-                <div className="px-3 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 rounded-full text-sm font-medium">Measurable Results</div>
-              </div>
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">Interactive AI Goal Explorer</h2>
-              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-4xl mx-auto">
-                Choose your business goals and watch AI agents execute them in real-time on a live CRM interface. Every goal comes with step-by-step execution, live progress tracking, and measurable business impact.
-              </p>
-            </div>
-
-            {/* Live System Dashboard */}
-            <div className="mb-8">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center">Live System Dashboard</h3>
-              <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">58</div>
-                  <div className="text-sm text-blue-600 dark:text-blue-400 font-medium">Available Goals</div>
-                  <div className="text-xs text-blue-500 dark:text-blue-500">Ready to execute</div>
-                </div>
-                
-                <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">0</div>
-                  <div className="text-sm text-green-600 dark:text-green-400 font-medium">Executing Now</div>
-                  <div className="text-xs text-green-500 dark:text-green-500">Active workflows</div>
-                </div>
-                
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">0</div>
-                  <div className="text-sm text-purple-600 dark:text-purple-400 font-medium">Completed</div>
-                  <div className="text-xs text-purple-500 dark:text-purple-500">Successfully achieved</div>
-                </div>
-                
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">0</div>
-                  <div className="text-sm text-orange-600 dark:text-orange-400 font-medium">AI Agents</div>
-                  <div className="text-xs text-orange-500 dark:text-orange-500">Currently working</div>
-                </div>
-                
-                <div className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">0</div>
-                  <div className="text-sm text-teal-600 dark:text-teal-400 font-medium">CRM Updates</div>
-                  <div className="text-xs text-teal-500 dark:text-teal-500">Data changes made</div>
-                </div>
-                
-                <div className="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/20 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-pink-600 dark:text-pink-400">$0</div>
-                  <div className="text-sm text-pink-600 dark:text-pink-400 font-medium">Business Value</div>
-                  <div className="text-xs text-pink-500 dark:text-pink-500">Generated ROI</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Interactive Goal Explorer */}
-        <div className="max-w-7xl mx-auto px-6 mb-8">
-          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl border border-white/50 dark:border-slate-700/50 shadow-2xl p-8">
-            
-            {/* Mode Toggle with Enhanced UX */}
-            <div className="flex items-center justify-center gap-4 mb-8">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 dark:text-gray-300">Execution Mode:</span>
-                <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-                  <button
-                    onClick={() => setRealMode(false)}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      !realMode ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                    }`}
-                  >
-                    🎭 Demo Mode
-                  </button>
-                  <button
-                    onClick={() => setRealMode(true)}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      realMode ? 'bg-white dark:bg-slate-700 text-green-600 dark:text-green-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                    }`}
-                  >
-                    🚀 Live Mode
-                  </button>
-                </div>
+          
+          {/* Expanded Filters */}
+          {showFilters && (
+            <div className="mt-6 pt-6 border-t border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                <select
+                  value={selectedPriority}
+                  onChange={(e) => setSelectedPriority(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="All">All Priorities</option>
+                  {priorityLevels.map(priority => (
+                    <option key={priority} value={priority}>{priority}</option>
+                  ))}
+                </select>
               </div>
               
-              {realMode ? (
-                <div className="flex items-center gap-2 px-3 py-1 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/50 rounded-lg">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-green-700 dark:text-green-300 font-medium">Real AI execution enabled</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg">
-                  <span className="text-sm text-blue-700 dark:text-blue-300">Demo mode - Click Live Mode for real execution</span>
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Complexity</label>
+                <select
+                  value={selectedComplexity}
+                  onChange={(e) => setSelectedComplexity(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="All">All Complexity Levels</option>
+                  {complexityLevels.map(complexity => (
+                    <option key={complexity} value={complexity}>{complexity}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="All">All Categories</option>
+                  {goalCategories.map(category => (
+                    <option key={category.id} value={category.id}>{category.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
+          )}
+        </div>
 
-            {/* Context Awareness Card */}
-            {context && (
-              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-700/50 backdrop-blur-sm mb-8">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-full">
-                      <Info className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                    </div>
+        {/* Results Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">
+              {selectedCategory === 'All' ? 'All AI Goals' : `${selectedCategory} Goals`}
+            </h2>
+            <p className="text-gray-600">
+              {filteredGoals.length} goal{filteredGoals.length !== 1 ? 's' : ''} found
+              {searchQuery && ` for "${searchQuery}"`}
+            </p>
+          </div>
+          
+          {filteredGoals.length > 0 && (
+            <div className="text-sm text-gray-600">
+              Total estimated setup time: {Math.round(filteredGoals.length * 1.5)} - {Math.round(filteredGoals.length * 3)} hours
+            </div>
+          )}
+        </div>
+
+        {/* Goals Grid/List */}
+        {filteredGoals.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+            <div className="text-gray-400 mb-4">
+              <Search className="h-12 w-12 mx-auto" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No goals found</h3>
+            <p className="text-gray-600 mb-4">
+              Try adjusting your search criteria or filters to find relevant AI goals.
+            </p>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedCategory('All');
+                setSelectedPriority('All');
+                setSelectedComplexity('All');
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Clear all filters
+            </button>
+          </div>
+        ) : (
+          <div className={
+            viewMode === 'grid'
+              ? 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6'
+              : 'space-y-4'
+          }>
+            {filteredGoals.map((goal) => (
+              <div key={goal.id} className={viewMode === 'list' ? 'bg-white rounded-xl p-4 border border-gray-200' : ''}>
+                {viewMode === 'grid' ? (
+                  <InteractiveGoalCard
+                    goal={goal}
+                    onExecute={handleExecuteGoal}
+                    isExecuting={executingGoals.has(goal.id)}
+                    executionProgress={executingGoals.has(goal.id) ? Math.random() * 100 : 0}
+                    realMode={realMode}
+                  />
+                ) : (
+                  /* List View */
+                  <div className="flex items-center gap-6">
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-blue-900 dark:text-blue-100 mb-2">
-                        Context-Aware Goal Recommendations
-                      </h3>
-                      <p className="text-blue-700 dark:text-blue-300 mb-4">
-                        Goals are pre-filtered and prioritized based on your current context: {context.type} - {context.name || context.title}
-                      </p>
-                      <div className="flex gap-2">
-                        <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium">
-                          {context.type} focused
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-bold text-gray-900">{goal.title}</h3>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          goal.priority === 'High' ? 'bg-red-100 text-red-700' :
+                          goal.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-green-100 text-green-700'
+                        }`}>
+                          {goal.priority}
                         </span>
-                        <span className="px-3 py-1 bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 rounded-full text-sm font-medium">
-                          Ready to execute
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700`}>
+                          {goal.complexity}
+                        </span>
+                      </div>
+                      <p className="text-gray-600 mb-2">{goal.description}</p>
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          {goal.estimatedSetupTime}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Bot className="h-4 w-4" />
+                          {goal.agentsRequired.length} agents
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <TrendingUp className="h-4 w-4" />
+                          {goal.roi}
                         </span>
                       </div>
                     </div>
+                    <button
+                      onClick={() => handleExecuteGoal(goal)}
+                      className={`px-6 py-3 text-white rounded-lg transition-colors flex items-center gap-2 ${
+                        realMode 
+                          ? 'bg-green-600 hover:bg-green-700' 
+                          : 'bg-blue-600 hover:bg-blue-700'
+                      }`}
+                    >
+                      <Play className="h-4 w-4" />
+                      {realMode ? '🚀 Execute Live' : '🎭 Demo Only'}
+                    </button>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <InteractiveGoalExplorer 
-              realMode={realMode}
-              onModeToggle={handleModeToggle}
-              onGoalSelected={handleGoalSelected}
-              contextData={context}
-            />
+                )}
+              </div>
+            ))}
           </div>
-        </div>
+        )}
       </div>
 
       {/* Goal Execution Modal */}
-      {showExecutionModal && selectedGoal && (
-        <GoalExecutionModal
-          goal={selectedGoal}
-          isOpen={showExecutionModal}
-          onClose={handleCloseModal}
-          onComplete={handleGoalComplete}
-          realMode={realMode}
-        />
-      )}
+      <GoalExecutionModal
+        goal={selectedGoal}
+        isOpen={isExecutionModalOpen}
+        onClose={handleCloseExecutionModal}
+        realMode={realMode}
+      />
     </div>
   );
-}
+};
+
+export default AIGoalsPage;
