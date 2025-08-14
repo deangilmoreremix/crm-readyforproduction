@@ -1,0 +1,3 @@
+cd /workspaces/crm-readyforproduction
+pwd
+ls -la

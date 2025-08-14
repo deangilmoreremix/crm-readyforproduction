@@ -1,49 +1,30 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Contact } from '../types';
+import { ArrowDown, ArrowUp, Brain, Check, CheckCheck, Download, FileInput, Plus, Search, Upload, X, Zap } from 'lucide-react';
+import { useOpenAI } from '../services/openaiService';
+import { useForm } from 'react-hook-form';
+import Avatar from 'react-avatar';
+import { CSVLink } from 'react-csv';
+import { useDropzone } from 'react-dropzone';
+import Papa from 'papaparse';
+import Fuse from 'fuse.js';
+import Select from 'react-select';
+import AIEnhancedContactCard from '../components/contacts/AIEnhancedContactCard';
+import ContactAgentButtons from '../components/contacts/ContactAgentButtons';
 import { 
-  Plus, 
-  Search, 
-  Filter, 
-  MoreHorizontal, 
-  Brain, 
-  Download, 
-  Upload, 
-  X,
-  ArrowUp,
-  ArrowDown,
-  CheckCheck,
-  Mail,
-  Phone,
-  Building,
-  User,
-  Calendar,
-  MapPin,
-  Edit,
-  Trash2,
-  Tag,
-  Eye
-} from 'lucide-react';
-import { ContactsModal } from '../components/modals/ContactsModal';
-
-// Sample contact interface (this would normally come from types)
-interface Contact {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  position?: string;
-  status: 'lead' | 'prospect' | 'customer' | 'churned';
-  score?: number;
-  lastContact?: Date;
-  notes?: string;
-  industry?: string;
-  location?: string;
-  avatar?: string;
-}
+  createColumnHelper, 
+  flexRender, 
+  getCoreRowModel, 
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+  SortingState,
+  PaginationState
+} from '@tanstack/react-table';
 
 const Contacts: React.FC = () => {
-  // Sample contacts data - replace with real data from store
+  // Mock data for demonstration
   const [contacts, setContacts] = useState<Contact[]>([
     {
       id: '1',
@@ -114,100 +95,240 @@ const Contacts: React.FC = () => {
       notes: 'Interested in AI features',
       industry: 'Technology',
       location: 'Malibu, CA'
+    },
+    {
+      id: '6',
+      name: 'Emily Clark',
+      email: 'emily@wayneenterprises.com',
+      phone: '(555) 345-6789',
+      company: 'Wayne Enterprises',
+      position: 'CFO',
+      status: 'prospect',
+      score: 68,
+      lastContact: new Date('2023-06-08'),
+      notes: 'Discussing budget allocation',
+      industry: 'Diversified',
+      location: 'Gotham City'
     }
   ]);
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
-  const [showAddContactModal, setShowAddContactModal] = useState(false);
-  const [showContactsModal, setShowContactsModal] = useState(false);
+  
+  const _openai = useOpenAI();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showAddContactModal, setShowAddContactModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importedData, setImportedData] = useState<unknown[]>([]);
+  const [importValidation, setImportValidation] = useState<{error?: string, success?: string}>({});
   const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
-  const [sortBy, setSortBy] = useState<'name' | 'company' | 'score' | 'lastContact'>('name');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
+  const [showBulkActions, setShowBulkActions] = useState(false);
 
-  // New contact form state
-  const [newContact, setNewContact] = useState<Partial<Contact>>({
-    status: 'lead'
+  // Table state
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
   });
-
+  
+  // Extract unique industries for filtering
+  const industries = [...new Set(contacts.map(contact => contact.industry))].filter(Boolean) as string[];
   const statuses = ['lead', 'prospect', 'customer', 'churned'];
-  const industries = ['Technology', 'Healthcare', 'Manufacturing', 'Financial Services', 'Retail', 'Other'];
+  
+  // Filters state
+  const [activeFilters, setActiveFilters] = useState<{
+    status: string | null,
+    industry: string | null,
+    score: [number, number] | null
+  }>({
+    status: null,
+    industry: null,
+    score: null
+  });
+  
+  // Set up fuzzy search with fuse.js
+  const fuse = useMemo(() => 
+    new Fuse(contacts, {
+      keys: ['name', 'email', 'company', 'phone'],
+      threshold: 0.3
+    }),
+  [contacts]);
+  
+  // Filter contacts based on search and active filters
+  const filteredContacts = useMemo(() => {
+    let result = contacts;
+    
+    // Apply search filter
+    if (searchTerm) {
+      result = fuse.search(searchTerm).map(res => res.item);
+    }
+    
+    // Apply status filter
+    if (activeFilters.status) {
+      result = result.filter(contact => contact.status === activeFilters.status);
+    }
+    
+    // Apply industry filter
+    if (activeFilters.industry) {
+      result = result.filter(contact => contact.industry === activeFilters.industry);
+    }
+    
+    // Apply score filter
+    if (activeFilters.score) {
+      const [min, max] = activeFilters.score;
+      result = result.filter(contact => 
+        (contact.score || 0) >= min && (contact.score || 0) <= max
+      );
+    }
+    
+    return result;
+  }, [contacts, searchTerm, activeFilters, fuse]);
+  
+  const toggleContactSelection = (id: string) => {
+    if (selectedContacts.includes(id)) {
+      setSelectedContacts(selectedContacts.filter(contactId => contactId !== id));
+    } else {
+      setSelectedContacts([...selectedContacts, id]);
+    }
+  };
 
+  const handleSelectAll = () => {
+    if (selectedContacts.length === filteredContacts.length) {
+      setSelectedContacts([]);
+    } else {
+      setSelectedContacts(filteredContacts.map(contact => contact.id));
+    }
+  };
+  
   const statusColors = {
     lead: 'bg-yellow-100 text-yellow-800',
     prospect: 'bg-purple-100 text-purple-800',
     customer: 'bg-green-100 text-green-800',
     churned: 'bg-red-100 text-red-800'
   };
+  
+  // Import contacts feature
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: {
+      'text/csv': ['.csv']
+    },
+    onDrop: (acceptedFiles) => {
+      const file = acceptedFiles[0];
+      if (file) {
+        // Only CSV is supported to avoid known Excel parser vulnerabilities
+        if (!file.name.toLowerCase().endsWith('.csv') && !file.type.includes('csv')) {
+          setImportValidation({ error: 'Please upload a CSV file (Excel not supported). Convert your sheet to CSV and retry.' });
+          return;
+        }
 
-  // Filter and search contacts
-  const filteredContacts = useMemo(() => {
-    let filtered = contacts;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const text = e.target?.result as string | undefined;
+            if (!text) {
+              setImportValidation({ error: 'Failed to read file' });
+              return;
+            }
 
-    // Apply search filter
-    if (searchTerm) {
-      filtered = filtered.filter(contact =>
-        contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contact.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contact.position?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+            const parsed = Papa.parse<Record<string, unknown>>(text, { header: true, skipEmptyLines: true });
+            if (parsed.errors && parsed.errors.length > 0) {
+              setImportValidation({ error: `CSV parse error: ${parsed.errors[0].message}` });
+              return;
+            }
 
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(contact => contact.status === statusFilter);
-    }
+            const rows = parsed.data as unknown[];
+            if (!rows || rows.length === 0) {
+              setImportValidation({ error: 'No data found in file' });
+              return;
+            }
 
-    // Apply sorting
-    return filtered.sort((a, b) => {
-      let aVal: any = a[sortBy];
-      let bVal: any = b[sortBy];
+            // Validate required columns
+            const requiredFields = ['name', 'email'];
+            const firstRow = rows[0] as any;
+            const missingFields = requiredFields.filter(field =>
+              Object.keys(firstRow || {}).every(key => key.toLowerCase() !== field.toLowerCase())
+            );
 
-      if (sortBy === 'lastContact') {
-        aVal = aVal?.getTime() || 0;
-        bVal = bVal?.getTime() || 0;
-      } else if (typeof aVal === 'string') {
-        aVal = aVal.toLowerCase();
-        bVal = bVal?.toLowerCase() || '';
+            if (missingFields.length > 0) {
+              setImportValidation({ error: `Missing required fields: ${missingFields.join(', ')}` });
+              return;
+            }
+
+            setImportedData(rows);
+            setImportValidation({ success: `Found ${rows.length} contacts ready to import` });
+          } catch (error) {
+            setImportValidation({ error: 'Failed to parse CSV' });
+          }
+        };
+        reader.readAsText(file);
       }
-
-      if (sortOrder === 'asc') {
-        return aVal > bVal ? 1 : -1;
-      } else {
-        return aVal < bVal ? 1 : -1;
-      }
+    }
+  });
+  
+  const handleImportContacts = () => {
+    if (importedData.length === 0) {
+      return;
+    }
+    
+    // Convert imported data to Contact format
+    const newContacts: Contact[] = importedData.map((row: unknown, index) => {
+      // Map the imported data to our Contact type
+      // This would need to be adjusted based on actual import format
+      return {
+        id: `imported-${Date.now()}-${index}`,
+        name: row.name || row.Name || '',
+        email: row.email || row.Email || '',
+        phone: row.phone || row.Phone || '',
+        company: row.company || row.Company || '',
+        position: row.position || row.Position || row.Title || '',
+        status: (row.status || row.Status || 'lead').toLowerCase(),
+        score: parseInt(row.score || row.Score || '50', 10),
+        notes: row.notes || row.Notes || '',
+        industry: row.industry || row.Industry || '',
+        location: row.location || row.Location || '',
+      };
     });
-  }, [contacts, searchTerm, statusFilter, sortBy, sortOrder]);
-
-  // Handle contact selection
-  const toggleContactSelection = (contactId: string) => {
-    setSelectedContacts(prev =>
-      prev.includes(contactId)
-        ? prev.filter(id => id !== contactId)
-        : [...prev, contactId]
-    );
+    
+    // Add to existing contacts
+    setContacts([...contacts, ...newContacts]);
+    setImportValidation({ success: `Successfully imported ${newContacts.length} contacts` });
+    
+    // Reset import state
+    setTimeout(() => {
+      setImportedData([]);
+      setShowImportModal(false);
+      setImportValidation({});
+    }, 1500);
   };
-
-  const selectAllContacts = () => {
-    if (selectedContacts.length === filteredContacts.length) {
-      setSelectedContacts([]);
-    } else {
-      setSelectedContacts(filteredContacts.map(c => c.id));
-    }
+  
+  // Create a new contact form
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<Contact>();
+  
+  const onSubmit = (data: unknown) => {
+    // Add new contact
+    const newContact: Contact = {
+      ...data,
+      id: `new-${Date.now()}`,
+      score: 50,
+      status: data.status || 'lead',
+      lastContact: new Date()
+    };
+    
+    setContacts([...contacts, newContact]);
+    reset();
+    setShowAddContactModal(false);
   };
-
-  // Handle AI analysis
-  const handleAnalyzeContacts = async () => {
+  
+  // Handle AI analysis of all contacts
+  const handleAnalyzeAllContacts = async () => {
     setIsAnalyzing(true);
     
     try {
-      // Simulate AI analysis
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // In a real app, we would process all leads in batches
+      // For demo purposes, just wait a moment and update scores
+      await new Promise(r => setTimeout(r, 1500));
       
       const updatedContacts = contacts.map(contact => {
+        // Simple mock logic to simulate AI scoring
         const randomAdjustment = Math.floor(Math.random() * 10) - 5;
         const newScore = Math.max(0, Math.min(100, (contact.score || 50) + randomAdjustment));
         
@@ -218,220 +339,276 @@ const Contacts: React.FC = () => {
       });
       
       setContacts(updatedContacts);
+      
+      // Clear selected contacts after bulk operation
       setSelectedContacts([]);
-    } catch (error) {
-      console.error('Error analyzing contacts:', error);
+      setShowBulkActions(false);
+    } catch (err) {
+      console.error("Error analyzing contacts:", err);
     } finally {
       setIsAnalyzing(false);
     }
   };
+  
+  // Table setup using @tanstack/react-table
+  const columnHelper = createColumnHelper<Contact>();
+  
+  const columns = useMemo(() => [
+    columnHelper.accessor('name', {
+      header: 'Name',
+      cell: (info) => (
+        <Link to={`/contacts/${info.row.original.id}`} className="flex items-center">
+          <Avatar 
+            name={info.getValue()} 
+            size="40" 
+            round 
+            className="mr-3" 
+          />
+          <div>
+            <div className="text-sm font-medium text-gray-900">{info.getValue()}</div>
+            <div className="text-sm text-gray-500">{info.row.original.email}</div>
+          </div>
+        </Link>
+      )
+    }),
+    columnHelper.accessor('company', {
+      header: 'Company',
+      cell: (info) => (
+        <div>
+          <div className="text-sm text-gray-900">{info.getValue() || 'N/A'}</div>
+          <div className="text-sm text-gray-500">{info.row.original.position || ''}</div>
+        </div>
+      )
+    }),
+    columnHelper.accessor('status', {
+      header: 'Status',
+      cell: (info) => (
+        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+          statusColors[info.getValue() as keyof typeof statusColors]
+        }`}>
+          {info.getValue().charAt(0).toUpperCase() + info.getValue().slice(1)}
+        </span>
+      )
+    }),
+    columnHelper.accessor('score', {
+      header: 'AI Score',
+      cell: (info) => (
+        <div className="flex items-center">
+          <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2">
+            <div 
+              className={`h-2.5 rounded-full ${
+                info.getValue() && info.getValue() >= 80 ? 'bg-green-500' : 
+                info.getValue() && info.getValue() >= 60 ? 'bg-blue-500' : 
+                info.getValue() && info.getValue() >= 40 ? 'bg-yellow-500' : 
+                'bg-red-500'
+              }`} 
+              style={{ width: `${info.getValue() || 0}%` }}
+            />
+          </div>
+          <span className="text-sm text-gray-500">
+            {info.getValue()}/100
+          </span>
+        </div>
+      )
+    }),
+    columnHelper.accessor('lastContact', {
+      header: 'Last Contact',
+      cell: (info) => (
+        <span className="text-sm text-gray-500">
+          {info.getValue()?.toLocaleDateString() || 'N/A'}
+        </span>
+      )
+    }),
+    columnHelper.accessor('industry', {
+      header: 'Industry',
+      cell: (info) => (
+        <span className="text-sm text-gray-500">
+          {info.getValue() || 'N/A'}
+        </span>
+      )
+    }),
+    columnHelper.accessor('id', {
+      header: 'Actions',
+      cell: (info) => (
+        <div className="flex justify-end">
+          <ContactAgentButtons contact={info.row.original} />
+        </div>
+      )
+    })
+  ], []);
 
-  // Handle add contact
-  const handleAddContact = () => {
-    if (!newContact.name || !newContact.email) return;
+  const table = useReactTable({
+    columns,
+    data: filteredContacts,
+    state: {
+      sorting,
+      pagination,
+    },
+    onSortingChange: setSorting,
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  });
 
-    const contact: Contact = {
-      id: `new-${Date.now()}`,
-      name: newContact.name || '',
-      email: newContact.email || '',
-      phone: newContact.phone,
-      company: newContact.company,
-      position: newContact.position,
-      status: newContact.status as Contact['status'] || 'lead',
-      score: 50,
-      lastContact: new Date(),
-      notes: newContact.notes,
-      industry: newContact.industry,
-      location: newContact.location
-    };
+  // Set up export data for CSV
+  const exportData = useMemo(() => 
+    contacts.map(contact => ({
+      Name: contact.name,
+      Email: contact.email,
+      Phone: contact.phone,
+      Company: contact.company,
+      Position: contact.position,
+      Status: contact.status,
+      Score: contact.score,
+      LastContact: contact.lastContact ? contact.lastContact.toLocaleDateString() : '',
+      Industry: contact.industry,
+      Location: contact.location,
+      Notes: contact.notes
+    })),
+  [contacts]);
 
-    setContacts([...contacts, contact]);
-    setNewContact({ status: 'lead' });
-    setShowAddContactModal(false);
-  };
-
-  // Handle sort
-  const handleSort = (field: 'name' | 'company' | 'score' | 'lastContact') => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortOrder('asc');
+  const csvHeaders = [
+    { label: "Name", key: "Name" },
+    { label: "Email", key: "Email" },
+    { label: "Phone", key: "Phone" },
+    { label: "Company", key: "Company" },
+    { label: "Position", key: "Position" },
+    { label: "Status", key: "Status" },
+    { label: "Score", key: "Score" },
+    { label: "Last Contact", key: "LastContact" },
+    { label: "Industry", key: "Industry" },
+    { label: "Location", key: "Location" },
+    { label: "Notes", key: "Notes" }
+  ];
+  
+  // Handle bulk AI analysis for selected contacts
+  const handleAnalyzeSelectedContacts = async () => {
+    if (selectedContacts.length === 0) return;
+    
+    setIsAnalyzing(true);
+    
+    try {
+      // Simple mock logic to simulate AI scoring
+      const updatedContacts = contacts.map(contact => {
+        if (selectedContacts.includes(contact.id)) {
+          const randomAdjustment = Math.floor(Math.random() * 10) - 5;
+          const newScore = Math.max(0, Math.min(100, (contact.score || 50) + randomAdjustment));
+          
+          return {
+            ...contact,
+            score: newScore
+          };
+        }
+        return contact;
+      });
+      
+      setContacts(updatedContacts);
+      
+      // Clear selected contacts after bulk operation
+      setSelectedContacts([]);
+      setShowBulkActions(false);
+    } catch (err) {
+      console.error("Error analyzing selected contacts:", err);
+    } finally {
+      setIsAnalyzing(false);
     }
   };
+  
+  // Watch for selections to show/hide bulk actions
+  useEffect(() => {
+    if (selectedContacts.length > 0) {
+      setShowBulkActions(true);
+    } else {
+      setShowBulkActions(false);
+    }
+  }, [selectedContacts]);
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
-  };
-
-  // Contact Card Component
-  const ContactCard = ({ contact }: { contact: Contact }) => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
-            {getInitials(contact.name)}
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">{contact.name}</h3>
-            <p className="text-gray-600">{contact.position} at {contact.company}</p>
-          </div>
-        </div>
-        <div className="flex space-x-2">
-          <input
-            type="checkbox"
-            checked={selectedContacts.includes(contact.id)}
-            onChange={() => toggleContactSelection(contact.id)}
-            className="rounded border-gray-300 text-blue-600"
-          />
-          <button className="text-gray-400 hover:text-gray-600">
-            <MoreHorizontal size={20} />
-          </button>
-        </div>
-      </div>
-
-      <div className="space-y-2 mb-4">
-        <div className="flex items-center text-sm text-gray-600">
-          <Mail size={16} className="mr-2" />
-          <a href={`mailto:${contact.email}`} className="hover:text-blue-600">
-            {contact.email}
-          </a>
-        </div>
-        {contact.phone && (
-          <div className="flex items-center text-sm text-gray-600">
-            <Phone size={16} className="mr-2" />
-            <a href={`tel:${contact.phone}`} className="hover:text-blue-600">
-              {contact.phone}
-            </a>
-          </div>
-        )}
-        {contact.location && (
-          <div className="flex items-center text-sm text-gray-600">
-            <MapPin size={16} className="mr-2" />
-            {contact.location}
-          </div>
-        )}
-        {contact.lastContact && (
-          <div className="flex items-center text-sm text-gray-600">
-            <Calendar size={16} className="mr-2" />
-            Last contact: {formatDate(contact.lastContact)}
-          </div>
-        )}
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[contact.status]}`}>
-            {contact.status.charAt(0).toUpperCase() + contact.status.slice(1)}
-          </span>
-          {contact.industry && (
-            <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
-              {contact.industry}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center space-x-1">
-          <span className="text-sm text-gray-500">Score:</span>
-          <span className="font-semibold text-blue-600">{contact.score || 0}/100</span>
-        </div>
-      </div>
-
-      <div className="mt-4 flex space-x-2">
-        <Link
-          to={`/contacts/${contact.id}`}
-          className="flex-1 bg-blue-50 text-blue-700 text-center py-2 rounded-md hover:bg-blue-100 transition-colors"
-        >
-          <Eye size={16} className="inline mr-1" />
-          View
-        </Link>
-        <button className="flex-1 bg-green-50 text-green-700 py-2 rounded-md hover:bg-green-100 transition-colors">
-          <Mail size={16} className="inline mr-1" />
-          Email
-        </button>
-        <button className="flex-1 bg-purple-50 text-purple-700 py-2 rounded-md hover:bg-purple-100 transition-colors">
-          <Phone size={16} className="inline mr-1" />
-          Call
-        </button>
-      </div>
-    </div>
-  );
+  // Calculate pagination values
+  const totalItems = filteredContacts.length;
+  const totalPages = Math.ceil(totalItems / pagination.pageSize);
+  const currentPage = pagination.pageIndex + 1;
+  const itemsPerPage = pagination.pageSize;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
-      {/* Header */}
-      <header className="mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
-            <p className="text-gray-600 mt-1">Manage your contacts with AI-powered insights</p>
-          </div>
-          <div className="mt-4 sm:mt-0 flex flex-wrap gap-2">
-            <button 
-              onClick={handleAnalyzeContacts}
-              disabled={isAnalyzing}
-              className="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-md transition-colors disabled:bg-purple-300"
-            >
-              <Brain size={18} className="mr-1" />
-              {isAnalyzing ? 'Analyzing...' : 'AI Lead Scoring'}
-            </button>
-            <button className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition-colors">
-              <Download size={18} className="mr-1" />
-              Export
-            </button>
-            <button className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md transition-colors">
-              <Upload size={18} className="mr-1" />
-              Import
-            </button>
-            <button 
-              onClick={() => setShowAddContactModal(true)}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
-            >
-              <Plus size={18} className="mr-1" />
-              Add Contact
-            </button>
-            <button 
-              onClick={() => setShowContactsModal(true)}
-              className="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-md transition-colors"
-            >
-              <User size={18} className="mr-1" />
-              Browse Contacts
-            </button>
-          </div>
+      <header className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Contacts</h1>
+          <p className="text-gray-600 mt-1">Manage your contacts with AI-powered insights</p>
+        </div>
+        <div className="mt-4 sm:mt-0 flex flex-wrap gap-2">
+          <button 
+            onClick={handleAnalyzeAllContacts}
+            disabled={isAnalyzing}
+            className="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-md transition-colors disabled:bg-purple-300"
+          >
+            <Brain size={18} className="mr-1" />
+            {isAnalyzing ? 'Analyzing...' : 'AI Lead Scoring'}
+          </button>
+          <CSVLink 
+            data={exportData}
+            headers={csvHeaders}
+            filename={"contacts_export.csv"}
+            className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition-colors"
+          >
+            <Download size={18} className="mr-1" />
+            Export
+          </CSVLink>
+          <button 
+            onClick={() => setShowImportModal(true)}
+            className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md transition-colors"
+          >
+            <Upload size={18} className="mr-1" />
+            Import
+          </button>
+          <button 
+            onClick={() => setShowAddContactModal(true)}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
+          >
+            <Plus size={18} className="mr-1" />
+            Add Contact
+          </button>
         </div>
       </header>
 
-      {/* Bulk Actions */}
-      {selectedContacts.length > 0 && (
+      {/* Bulk Actions Bar */}
+      {showBulkActions && (
         <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6 flex justify-between items-center">
           <div className="flex items-center">
             <span className="text-blue-700 font-medium">{selectedContacts.length} contacts selected</span>
             <button 
-              onClick={() => setSelectedContacts([])}
-              className="ml-4 text-blue-600 hover:text-blue-800"
+              onClick={handleSelectAll}
+              className="ml-4 text-sm text-blue-600 hover:text-blue-800"
             >
-              Clear selection
+              {selectedContacts.length === filteredContacts.length ? 'Deselect All' : 'Select All'}
             </button>
           </div>
+          
           <div className="flex space-x-2">
-            <button className="px-3 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200">
-              Delete
+            <button
+              onClick={handleAnalyzeSelectedContacts}
+              className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+            >
+              <Zap size={16} className="mr-1" />
+              Analyze Selected
             </button>
-            <button className="px-3 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200">
+            <button className="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50">
+              Add to Sequence
+            </button>
+            <button className="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50">
               Export Selected
+            </button>
+            <button 
+              onClick={() => setSelectedContacts([])}
+              className="inline-flex items-center px-2 py-1.5 text-gray-500 hover:text-gray-700"
+            >
+              <X size={16} />
             </button>
           </div>
         </div>
       )}
 
-      {/* Filters and Search */}
       <div className="bg-white rounded-lg shadow-sm mb-6">
         <div className="p-4 border-b border-gray-200">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -447,202 +624,191 @@ const Contacts: React.FC = () => {
                 className="pl-10 pr-4 py-2 w-full border rounded-md focus:ring-blue-500 focus:border-blue-500 outline-none"
               />
             </div>
-
+            
             <div className="flex flex-wrap gap-2">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 outline-none"
-              >
-                <option value="all">All Statuses</option>
-                {statuses.map(status => (
-                  <option key={status} value={status}>
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                  </option>
-                ))}
-              </select>
-
+              <div>
+                <Select
+                  placeholder="Status"
+                  isClearable
+                  className="min-w-[150px]"
+                  options={statuses.map(status => ({ value: status, label: status.charAt(0).toUpperCase() + status.slice(1) }))}
+                  onChange={(selectedOption) => setActiveFilters({
+                    ...activeFilters, 
+                    status: selectedOption?.value || null
+                  })}
+                />
+              </div>
+              <div>
+                <Select
+                  placeholder="Industry"
+                  isClearable
+                  className="min-w-[170px]"
+                  options={industries.map(industry => ({ value: industry, label: industry }))}
+                  onChange={(selectedOption) => setActiveFilters({
+                    ...activeFilters, 
+                    industry: selectedOption?.value || null
+                  })}
+                />
+              </div>
               <div className="flex space-x-2">
                 <button 
-                  onClick={() => setViewMode('card')}
-                  className={`px-3 py-2 rounded-md ${viewMode === 'card' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}
+                  onClick={() => setViewMode('table')}
+                  className={`p-2 rounded border ${viewMode === 'table' ? 'bg-blue-50 border-blue-300 text-blue-700' : 'border-gray-300'}`}
                 >
-                  Cards
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                  </svg>
                 </button>
                 <button 
-                  onClick={() => setViewMode('table')}
-                  className={`px-3 py-2 rounded-md ${viewMode === 'table' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}
+                  onClick={() => setViewMode('card')}
+                  className={`p-2 rounded border ${viewMode === 'card' ? 'bg-blue-50 border-blue-300 text-blue-700' : 'border-gray-300'}`}
                 >
-                  Table
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                  </svg>
                 </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Contacts Display */}
-      {filteredContacts.length > 0 ? (
-        viewMode === 'card' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredContacts.map(contact => (
-              <ContactCard key={contact.id} contact={contact} />
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left">
-                    <input
-                      type="checkbox"
-                      checked={selectedContacts.length === filteredContacts.length}
-                      onChange={selectAllContacts}
-                      className="rounded border-gray-300 text-blue-600"
-                    />
-                  </th>
-                  <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort('name')}
-                  >
-                    <div className="flex items-center">
-                      Name
-                      {sortBy === 'name' && (
-                        sortOrder === 'asc' ? <ArrowUp size={14} className="ml-1" /> : <ArrowDown size={14} className="ml-1" />
-                      )}
-                    </div>
-                  </th>
-                  <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort('company')}
-                  >
-                    <div className="flex items-center">
-                      Company
-                      {sortBy === 'company' && (
-                        sortOrder === 'asc' ? <ArrowUp size={14} className="ml-1" /> : <ArrowDown size={14} className="ml-1" />
-                      )}
-                    </div>
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort('score')}
-                  >
-                    <div className="flex items-center">
-                      Score
-                      {sortBy === 'score' && (
-                        sortOrder === 'asc' ? <ArrowUp size={14} className="ml-1" /> : <ArrowDown size={14} className="ml-1" />
-                      )}
-                    </div>
-                  </th>
-                  <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort('lastContact')}
-                  >
-                    <div className="flex items-center">
-                      Last Contact
-                      {sortBy === 'lastContact' && (
-                        sortOrder === 'asc' ? <ArrowUp size={14} className="ml-1" /> : <ArrowDown size={14} className="ml-1" />
-                      )}
-                    </div>
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredContacts.map(contact => (
-                  <tr key={contact.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <input
-                        type="checkbox"
-                        checked={selectedContacts.includes(contact.id)}
-                        onChange={() => toggleContactSelection(contact.id)}
-                        className="rounded border-gray-300 text-blue-600"
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+        <div className="overflow-x-auto">
+          {filteredContacts.length > 0 ? (
+            viewMode === 'table' ? (
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-3 py-3 text-left">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold mr-3">
-                          {getInitials(contact.name)}
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{contact.name}</div>
-                          <div className="text-sm text-gray-500">{contact.email}</div>
-                        </div>
+                        <input
+                          type="checkbox"
+                          checked={selectedContacts.length === filteredContacts.length}
+                          onChange={handleSelectAll}
+                          className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                        />
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{contact.company || 'N/A'}</div>
-                      <div className="text-sm text-gray-500">{contact.position || ''}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusColors[contact.status]}`}>
-                        {contact.status.charAt(0).toUpperCase() + contact.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${contact.score || 0}%` }}
-                          />
-                        </div>
-                        <span className="text-sm text-gray-500">{contact.score || 0}/100</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {contact.lastContact ? formatDate(contact.lastContact) : 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex space-x-1">
-                        <Link
-                          to={`/contacts/${contact.id}`}
-                          className="text-blue-600 hover:text-blue-900"
+                    </th>
+                    {table.getHeaderGroups().map(headerGroup => (
+                      headerGroup.headers.map(header => (
+                        <th 
+                          key={header.id}
+                          scope="col" 
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer group"
+                          onClick={header.column.getToggleSortingHandler()}
                         >
-                          <Eye size={16} />
-                        </Link>
-                        <button className="text-green-600 hover:text-green-900">
-                          <Mail size={16} />
-                        </button>
-                        <button className="text-purple-600 hover:text-purple-900">
-                          <Phone size={16} />
-                        </button>
-                      </div>
-                    </td>
+                          <div className="flex items-center">
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            <span className="ml-1">
+                              {{
+                                asc: <ArrowUp size={14} className="text-gray-500" />,
+                                desc: <ArrowDown size={14} className="text-gray-500" />
+                              }[header.column.getIsSorted() as string] ?? (
+                                <div className="opacity-0 group-hover:opacity-100">
+                                  <ArrowUp size={14} className="text-gray-300" />
+                                </div>
+                              )}
+                            </span>
+                          </div>
+                        </th>
+                      ))
+                    ))}
                   </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {table.getRowModel().rows.map(row => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+                      <td className="px-3 py-4 whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={selectedContacts.includes(row.original.id)}
+                          onChange={() => toggleContactSelection(row.original.id)}
+                          className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                        />
+                      </td>
+                      {row.getVisibleCells().map(cell => (
+                        <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                {filteredContacts.map(contact => (
+                  <AIEnhancedContactCard
+                    key={contact.id}
+                    contact={contact}
+                    isSelected={selectedContacts.includes(contact.id)}
+                    onSelect={() => toggleContactSelection(contact.id)}
+                    onClick={() => window.location.href = `/contacts/${contact.id}`}
+                  />
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )
-      ) : (
-        <div className="text-center py-12">
-          <User size={48} className="mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No contacts found</h3>
-          <p className="text-gray-500 mb-4">
-            {searchTerm ? `No results for "${searchTerm}"` : 'Get started by adding your first contact.'}
-          </p>
-          <button 
-            onClick={() => setShowAddContactModal(true)}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
-          >
-            <Plus size={18} className="mr-1" />
-            Add Contact
-          </button>
+              </div>
+            )
+          ) : (
+            <div className="text-center p-8">
+              <p className="text-gray-500 mb-2">No contacts found</p>
+              {searchTerm && (
+                <button 
+                  onClick={() => setSearchTerm('')}
+                  className="text-sm text-blue-600 hover:text-blue-800"
+                >
+                  Clear search
+                </button>
+              )}
+            </div>
+          )}
         </div>
-      )}
-
+        
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200">
+            <div>
+              <p className="text-sm text-gray-700">
+                Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
+                <span className="font-medium">
+                  {Math.min(currentPage * itemsPerPage, filteredContacts.length)}
+                </span>{' '}
+                of <span className="font-medium">{filteredContacts.length}</span> results
+              </p>
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+                className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+                className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+      
       {/* Add Contact Modal */}
       {showAddContactModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="fixed inset-0 z-10 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowAddContactModal(false)}></div>
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
             
             <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
@@ -656,122 +822,256 @@ const Contacts: React.FC = () => {
                   </button>
                 </div>
                 
-                <div className="grid grid-cols-1 gap-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Name *</label>
-                    <input
-                      type="text"
-                      value={newContact.name || ''}
-                      onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-                      required
-                    />
+                <form onSubmit={handleSubmit(onSubmit)}>
+                  <div className="grid grid-cols-1 gap-y-4">
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name *</label>
+                      <input
+                        id="name"
+                        type="text"
+                        {...register("name", { required: "Name is required" })}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      />
+                      {errors.name && (
+                        <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email *</label>
+                      <input
+                        id="email"
+                        type="email"
+                        {...register("email", { 
+                          required: "Email is required",
+                          pattern: {
+                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                            message: "Invalid email address"
+                          }
+                        })}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      />
+                      {errors.email && (
+                        <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone</label>
+                      <input
+                        id="phone"
+                        type="tel"
+                        {...register("phone")}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="company" className="block text-sm font-medium text-gray-700">Company</label>
+                      <input
+                        id="company"
+                        type="text"
+                        {...register("company")}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="position" className="block text-sm font-medium text-gray-700">Position</label>
+                      <input
+                        id="position"
+                        type="text"
+                        {...register("position")}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="industry" className="block text-sm font-medium text-gray-700">Industry</label>
+                      <select
+                        id="industry"
+                        {...register("industry")}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      >
+                        <option value="">Select Industry</option>
+                        {industries.map(industry => (
+                          <option key={industry} value={industry}>{industry}</option>
+                        ))}
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
+                      <select
+                        id="status"
+                        {...register("status")}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      >
+                        {statuses.map(status => (
+                          <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="location" className="block text-sm font-medium text-gray-700">Location</label>
+                      <input
+                        id="location"
+                        type="text"
+                        {...register("location")}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes</label>
+                      <textarea
+                        id="notes"
+                        rows={3}
+                        {...register("notes")}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      />
+                    </div>
                   </div>
                   
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Email *</label>
-                    <input
-                      type="email"
-                      value={newContact.email || ''}
-                      onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Phone</label>
-                    <input
-                      type="tel"
-                      value={newContact.phone || ''}
-                      onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Company</label>
-                    <input
-                      type="text"
-                      value={newContact.company || ''}
-                      onChange={(e) => setNewContact({ ...newContact, company: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Position</label>
-                    <input
-                      type="text"
-                      value={newContact.position || ''}
-                      onChange={(e) => setNewContact({ ...newContact, position: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Status</label>
-                    <select
-                      value={newContact.status || 'lead'}
-                      onChange={(e) => setNewContact({ ...newContact, status: e.target.value as Contact['status'] })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                  <div className="pt-4 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddContactModal(false)}
+                      className="mr-3 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     >
-                      {statuses.map(status => (
-                        <option key={status} value={status}>
-                          {status.charAt(0).toUpperCase() + status.slice(1)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Industry</label>
-                    <select
-                      value={newContact.industry || ''}
-                      onChange={(e) => setNewContact({ ...newContact, industry: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     >
-                      <option value="">Select Industry</option>
-                      {industries.map(industry => (
-                        <option key={industry} value={industry}>{industry}</option>
-                      ))}
-                    </select>
+                      Add Contact
+                    </button>
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Location</label>
-                    <input
-                      type="text"
-                      value={newContact.location || ''}
-                      onChange={(e) => setNewContact({ ...newContact, location: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Notes</label>
-                    <textarea
-                      rows={3}
-                      value={newContact.notes || ''}
-                      onChange={(e) => setNewContact({ ...newContact, notes: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-                    />
-                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Import Contacts Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-10 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium leading-6 text-gray-900">Import Contacts</h3>
+                  <button
+                    onClick={() => setShowImportModal(false)}
+                    className="text-gray-400 hover:text-gray-500"
+                  >
+                    <X size={20} />
+                  </button>
                 </div>
                 
-                <div className="pt-4 flex justify-end space-x-3">
-                  <button
-                    onClick={() => setShowAddContactModal(false)}
-                    className="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                {importValidation.error && (
+                  <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md border border-red-200">
+                    {importValidation.error}
+                  </div>
+                )}
+                
+                {importValidation.success && (
+                  <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-md border border-green-200 flex items-center">
+                    <CheckCheck size={18} className="mr-2" />
+                    {importValidation.success}
+                  </div>
+                )}
+                
+                {!importedData.length ? (
+                  <div 
+                    {...getRootProps()} 
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors"
                   >
-                    Cancel
+                    <input {...getInputProps()} />
+                    <FileInput className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <p className="mt-2 text-sm text-gray-600">
+                      Drag and drop a file here, or click to select a file
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Supports CSV, XLS, XLSX
+                    </p>
+                  </div>
+                ) : (
+                  <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <h4 className="font-medium mb-2">Preview ({importedData.length} contacts)</h4>
+                    <div className="max-h-60 overflow-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            {Object.keys(importedData[0]).map(key => (
+                              <th 
+                                key={key}
+                                className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                              >
+                                {key}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {importedData.slice(0, 5).map((row, rowIndex) => (
+                            <tr key={rowIndex}>
+                              {Object.values(row).map((value, colIndex) => (
+                                <td 
+                                  key={colIndex}
+                                  className="px-3 py-2 whitespace-nowrap text-sm text-gray-500"
+                                >
+                                  {String(value)}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                          {importedData.length > 5 && (
+                            <tr>
+                              <td 
+                                colSpan={Object.keys(importedData[0]).length}
+                                className="px-3 py-2 text-center text-sm text-gray-500"
+                              >
+                                ... and {importedData.length - 5} more rows
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="mt-5 sm:mt-6 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImportedData([]);
+                      setImportValidation({});
+                    }}
+                    className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    Reset
                   </button>
                   <button
-                    onClick={handleAddContact}
-                    disabled={!newContact.name || !newContact.email}
-                    className="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300"
+                    type="button"
+                    onClick={handleImportContacts}
+                    disabled={importedData.length === 0}
+                    className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white ${
+                      importedData.length === 0
+                        ? 'bg-blue-300 cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700'
+                    }`}
                   >
-                    Add Contact
+                    Import Contacts
                   </button>
                 </div>
               </div>
@@ -779,17 +1079,6 @@ const Contacts: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Enhanced Contacts Modal */}
-      <ContactsModal
-        isOpen={showContactsModal}
-        onClose={() => setShowContactsModal(false)}
-        onSelectContact={(contactId) => {
-          console.log('Selected contact:', contactId);
-          // You can add navigation or other actions here
-        }}
-        selectionMode={false}
-      />
     </div>
   );
 };

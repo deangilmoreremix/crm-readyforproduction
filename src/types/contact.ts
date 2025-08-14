@@ -13,27 +13,19 @@ export interface Contact {
   avatar?: string;
   sources?: string[];
   source?: string;
-  interestLevel?: 'hot' | 'medium' | 'low' | 'cold';
+  interestLevel?: 'hot' | 'medium' | 'low';
   status: string;
   lastConnected?: string;
-  lastContact?: Date;
   notes?: string;
   aiScore?: number;
-  score?: number;
   tags: string[];
   isFavorite?: boolean;
   socialProfiles?: {
     linkedin?: string;
     twitter?: string;
-    facebook?: string;
-    instagram?: string;
     website?: string;
   };
-  customFields?: Record<string, any>;
-  location?: string;
-  department?: string;
-  preferredContact?: 'email' | 'phone' | 'text' | 'social';
-  timezone?: string;
+  customFields?: Record<string, string>;
   createdAt: string | Date;
   updatedAt: string | Date;
 }

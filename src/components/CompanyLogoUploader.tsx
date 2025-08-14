@@ -1,14 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { 
-  Upload, 
-  Image, 
-  X, 
-  Check, 
-  AlertCircle, 
-  Loader2,
-  Eye,
-  Trash2
-} from 'lucide-react';
+import { AlertCircle, Check, Eye, File, Loader2, Trash2, Upload } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { supabase, STORAGE_BUCKETS } from '../lib/supabase';
 
@@ -124,7 +115,7 @@ const CompanyLogoUploader: React.FC<CompanyLogoUploaderProps> = ({
         });
 
       uploadTask
-        .then(({ data, error }) => {
+        .then(({ _data, error }) => {
           if (error) {
             throw error;
           }

@@ -1,0 +1,4 @@
+git push -u origin HEAD
+gh pr create --fill
+OPENAI_API_KEY=<set in deployment secret store>
+STRIPE_SECRET_KEY=<set in deployment secret store>

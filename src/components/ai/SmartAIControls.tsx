@@ -3,27 +3,12 @@ import { useSmartAI, useTaskOptimization } from '../../hooks/useSmartAI';
 import { ModernButton } from '../ui/ModernButton';
 import { GlassCard } from '../ui/GlassCard';
 import { Contact } from '../../types/contact';
-import {
-  Brain,
-  Zap,
-  Target,
-  BarChart3,
-  Settings,
-  Sparkles,
-  TrendingUp,
-  Clock,
-  DollarSign,
-  CheckCircle,
-  AlertCircle,
-  Info,
-  Layers,
-  RefreshCw
-} from 'lucide-react';
+import { Brain, Zap, Target, BarChart3, Sparkles, TrendingUp, Clock, DollarSign, CheckCircle, AlertCircle, Layers } from 'lucide-react';
 
 interface SmartAIControlsProps {
   contact?: Contact;
   contacts?: Contact[];
-  onAnalysisComplete?: (results: any) => void;
+  onAnalysisComplete?: (results: unknown) => void;
 }
 
 export const SmartAIControls: React.FC<SmartAIControlsProps> = ({
@@ -43,7 +28,7 @@ export const SmartAIControls: React.FC<SmartAIControlsProps> = ({
     errors
   } = useSmartAI();
 
-  const { getRecommendations, getInsights, performance } = useTaskOptimization();
+  const { getRecommendations, _getInsights, performance } = useTaskOptimization();
 
   const [selectedOperation, setSelectedOperation] = useState<string>('score');
   const [urgency, setUrgency] = useState<'low' | 'medium' | 'high'>('medium');
@@ -251,7 +236,7 @@ export const SmartAIControls: React.FC<SmartAIControlsProps> = ({
               ].map((option) => (
                 <button
                   key={option.value}
-                  onClick={() => setUrgency(option.value as any)}
+                  onClick={() => setUrgency(option.value as unknown)}
                   className={`flex-1 p-3 rounded-lg border text-center transition-colors ${
                     urgency === option.value
                       ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -404,7 +389,7 @@ export const SmartAIControls: React.FC<SmartAIControlsProps> = ({
           </h3>
           
           <div className="space-y-3">
-            {performance.modelPerformance.slice(0, 5).map((model: any, index: number) => (
+            {performance.modelPerformance.slice(0, 5).map((model: unknown, index: number) => (
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
                   <div className="font-medium text-gray-900">{model.model}</div>

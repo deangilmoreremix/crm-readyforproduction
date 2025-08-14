@@ -2,24 +2,19 @@ import React, { useState } from 'react';
 import { MoreHorizontal, Mail, MapPin, Building } from 'lucide-react';
 import Avatar from './ui/Avatar';
 import CallButton from './CallButton';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { getInitials } from '../utils/avatars';
 import { useTheme } from '../contexts/ThemeContext';
 import { Contact } from '../types/contact';
 
 interface ContactCardProps {
   contact: Contact;
-  onContactClick?: (contact: Contact) => void;
 }
 
-const ContactCard: React.FC<ContactCardProps> = ({ contact, onContactClick }) => {
+const ContactCard: React.FC<ContactCardProps> = ({ contact }) => {
   const { isDark } = useTheme();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
-
-  const handleContactClick = () => {
-    if (onContactClick) {
-      onContactClick(contact);
-    }
-  };
 
   const getStatusColor = (interestLevel: string) => {
     switch (interestLevel) {
@@ -34,7 +29,7 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, onContactClick }) =>
 
   return (
     <div 
-      onClick={handleContactClick}
+      onClick={() => navigate(`/contacts/${contact.id}`)}
       className={`${isDark ? 'bg-gray-800/50' : 'bg-white'} backdrop-blur-xl border ${isDark ? 'border-white/10' : 'border-gray-200'} rounded-2xl p-6 hover:${isDark ? 'bg-gray-800/70' : 'bg-gray-50'} transition-all duration-300 group cursor-pointer`}
     >
       <div className="flex items-start justify-between mb-4">
@@ -67,7 +62,7 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, onContactClick }) =>
                 } flex items-center space-x-2`}
                 onClick={(e) => {
                   e.stopPropagation();
-                  console.log('Edit contact:', contact.id);
+                  navigate(`/contacts/${contact.id}/edit`);
                 }}
               >
                 <MapPin size={14} className="text-gray-400" />

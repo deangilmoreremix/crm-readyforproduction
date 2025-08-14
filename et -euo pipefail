@@ -1,0 +1,1970 @@
+diff --git a/src/App.tsx b/extracted/smartcrm_nav_routing_patch/src/App.tsx
+index f57d055..0a81443 100644
+--- a/src/App.tsx
++++ b/extracted/smartcrm_nav_routing_patch/src/App.tsx
+@@ -1,47 +1,20 @@
++import React from 'react';
+ import { BrowserRouter, Routes, Route } from 'react-router-dom';
+-
+-// Providers from the Progressive app
+-import { ThemeProvider } from './contexts/ThemeContext';
+-import { DashboardLayoutProvider } from './contexts/DashboardLayoutContext';
+-import { AIToolsProvider } from './components/AIToolsProvider';
+-import { NavigationProvider } from './contexts/NavigationContext';
+-import { VideoCallProvider } from './contexts/VideoCallContext';
+-
+-// Keep the Friday Navbar with Research modal
+ import Navbar from './components/layout/Navbar';
+-
+-// Use richer views: redesigned Dashboard and full-feature pages
+-import Dashboard from './components/Dashboard';
+-import Pipeline from './pages/Pipeline';
+-import Contacts from './pages/Contacts';
+-import AIGoalsPage from './pages/AIGoalsPage';
++import Dashboard from './pages/Dashboard';
++import ContactsEnhancedCards from './components/contacts/ContactsEnhancedCards';
++import DealsBoard from './components/pipeline/DealsBoard';
+ 
+ export default function App() {
+   return (
+     <BrowserRouter>
+-      <ThemeProvider>
+-        <DashboardLayoutProvider>
+-          <AIToolsProvider>
+-            <NavigationProvider>
+-              <VideoCallProvider>
+-                <div className="min-h-screen h-full w-full flex flex-col">
+-                  <Navbar />
+-                  <div className="flex-1 w-full overflow-hidden">
+-                    <Routes>
+-                      <Route path="/" element={<Dashboard />} />
+-                      <Route path="/dashboard" element={<Dashboard />} />
+-                      <Route path="/pipeline" element={<Pipeline />} />
+-                      <Route path="/contacts" element={<Contacts />} />
+-                      <Route path="/ai-goals" element={<AIGoalsPage />} />
+-                      <Route path="*" element={<Dashboard />} />
+-                    </Routes>
+-                  </div>
+-                </div>
+-              </VideoCallProvider>
+-            </NavigationProvider>
+-          </AIToolsProvider>
+-        </DashboardLayoutProvider>
+-      </ThemeProvider>
++      <Navbar />
++      <Routes>
++        <Route path="/" element={<Dashboard />} />
++        <Route path="/dashboard" element={<Dashboard />} />
++        <Route path="/contacts" element={<ContactsEnhancedCards />} />
++        <Route path="/pipeline" element={<DealsBoard />} />
++      </Routes>
+     </BrowserRouter>
+   );
+ }
+diff --git a/src/DashboardV3.tsx b/src/DashboardV3.tsx
+deleted file mode 100644
+index c4ffd5f..0000000
+--- a/src/DashboardV3.tsx
++++ /dev/null
+@@ -1,74 +0,0 @@
+-import React from 'react';
+-import DashboardHeader from '../modules/dashboard-v3/src/components/dashboard/DashboardHeader';
+-import KPICards from '../modules/dashboard-v3/src/components/dashboard/KPICards';
+-import MetricsCards from '../modules/dashboard-v3/src/components/dashboard/MetricsCards';
+-import ChartsSection from '../modules/dashboard-v3/src/components/dashboard/ChartsSection';
+-import QuickActions from '../modules/dashboard-v3/src/components/dashboard/QuickActions';
+-import RecentActivity from '../modules/dashboard-v3/src/components/dashboard/RecentActivity';
+-import TasksAndFunnel from '../modules/dashboard-v3/src/components/dashboard/TasksAndFunnel';
+-import NewLeadsSection from '../modules/dashboard-v3/src/components/dashboard/NewLeadsSection';
+-import AIInsightsPanel from '../modules/dashboard-v3/src/components/dashboard/AIInsightsPanel';
+-import CustomerProfile from '../modules/dashboard-v3/src/components/dashboard/CustomerProfile';
+-import InteractionHistory from '../modules/dashboard-v3/src/components/dashboard/InteractionHistory';
+-import ConnectedApps from '../modules/dashboard-v3/src/components/dashboard/ConnectedApps';
+-
+-const DashboardV3: React.FC = () => {
+-  return (
+-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-slate-900 dark:to-gray-800">
+-      <div className="p-6 max-w-7xl mx-auto">
+-        <DashboardHeader />
+-        
+-        {/* KPI Overview */}
+-        <div className="mb-8">
+-          <KPICards />
+-        </div>
+-        
+-        {/* Metrics and Quick Actions Row */}
+-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+-          <div className="lg:col-span-2">
+-            <MetricsCards />
+-          </div>
+-          <div>
+-            <QuickActions />
+-          </div>
+-        </div>
+-        
+-        {/* Charts and Analytics */}
+-        <div className="mb-8">
+-          <ChartsSection />
+-        </div>
+-        
+-        {/* Three Column Layout */}
+-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+-          <div>
+-            <TasksAndFunnel />
+-          </div>
+-          <div>
+-            <NewLeadsSection />
+-          </div>
+-          <div>
+-            <AIInsightsPanel />
+-          </div>
+-        </div>
+-        
+-        {/* Bottom Row */}
+-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+-          <div>
+-            <RecentActivity />
+-          </div>
+-          <div>
+-            <CustomerProfile />
+-          </div>
+-          <div>
+-            <InteractionHistory />
+-          </div>
+-          <div>
+-            <ConnectedApps />
+-          </div>
+-        </div>
+-      </div>
+-    </div>
+-  );
+-};
+-
+-export default DashboardV3;
+diff --git a/src/MinimalApp.tsx b/src/MinimalApp.tsx
+deleted file mode 100644
+index afdb5e3..0000000
+--- a/src/MinimalApp.tsx
++++ /dev/null
+@@ -1,68 +0,0 @@
+-import React from 'react';
+-import { Routes, Route } from 'react-router-dom';
+-
+-// Simple dashboard component for testing
+-function SimpleDashboard() {
+-  return (
+-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+-      <div className="max-w-7xl mx-auto">
+-        <h1 className="text-3xl font-bold text-gray-900 mb-8">
+-          🎉 SmartCRM Dashboard
+-        </h1>
+-        
+-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+-          <div className="bg-white p-6 rounded-lg shadow-lg">
+-            <h3 className="text-lg font-semibold mb-2">Dashboard</h3>
+-            <p className="text-gray-600">Your main dashboard is loading...</p>
+-          </div>
+-          
+-          <div className="bg-white p-6 rounded-lg shadow-lg">
+-            <h3 className="text-lg font-semibold mb-2">Pipeline</h3>
+-            <p className="text-gray-600">Sales pipeline management</p>
+-          </div>
+-          
+-          <div className="bg-white p-6 rounded-lg shadow-lg">
+-            <h3 className="text-lg font-semibold mb-2">Contacts</h3>
+-            <p className="text-gray-600">Contact management system</p>
+-          </div>
+-          
+-          <div className="bg-white p-6 rounded-lg shadow-lg">
+-            <h3 className="text-lg font-semibold mb-2">AI Tools</h3>
+-            <p className="text-gray-600">AI-powered automation tools</p>
+-          </div>
+-          
+-          <div className="bg-white p-6 rounded-lg shadow-lg">
+-            <h3 className="text-lg font-semibold mb-2">Tasks</h3>
+-            <p className="text-gray-600">Task management</p>
+-          </div>
+-          
+-          <div className="bg-white p-6 rounded-lg shadow-lg">
+-            <h3 className="text-lg font-semibold mb-2">Settings</h3>
+-            <p className="text-gray-600">Application settings</p>
+-          </div>
+-        </div>
+-        
+-        <div className="mt-8 bg-green-50 border border-green-200 rounded-lg p-4">
+-          <h4 className="text-green-800 font-semibold">✅ Success!</h4>
+-          <p className="text-green-700 mt-1">
+-            Your SmartCRM app is loading successfully. Full features coming back online...
+-          </p>
+-        </div>
+-      </div>
+-    </div>
+-  );
+-}
+-
+-function MinimalApp() {
+-  return (
+-    <div className="h-full w-full">
+-      <Routes>
+-        <Route path="/" element={<SimpleDashboard />} />
+-        <Route path="/dashboard" element={<SimpleDashboard />} />
+-        <Route path="*" element={<SimpleDashboard />} />
+-      </Routes>
+-    </div>
+-  );
+-}
+-
+-export default MinimalApp;
+diff --git a/src/ProgressiveApp.tsx b/src/ProgressiveApp.tsx
+deleted file mode 100644
+index f126541..0000000
+--- a/src/ProgressiveApp.tsx
++++ /dev/null
+@@ -1,63 +0,0 @@
+-import { Routes, Route } from 'react-router-dom';
+-
+-// Import context providers
+-import { ThemeProvider } from './contexts/ThemeContext';
+-import { DashboardLayoutProvider } from './contexts/DashboardLayoutContext';
+-import { AIToolsProvider } from './components/AIToolsProvider';
+-import { NavigationProvider } from './contexts/NavigationContext';
+-import { VideoCallProvider } from './contexts/VideoCallContext';
+-
+-// Use the complete redesigned Dashboard from smartcrmdash integration
+-import Dashboard from './components/Dashboard';
+-
+-// Import page components from src directory
+-import Pipeline from './pages/Pipeline';
+-import Contacts from './pages/Contacts';
+-
+-function SimpleNavbar() {
+-  return (
+-    <nav className="bg-white shadow-sm border-b">
+-      <div className="max-w-7xl mx-auto px-4">
+-        <div className="flex justify-between h-16">
+-          <div className="flex items-center">
+-            <h1 className="text-xl font-bold text-gray-900">SmartCRM</h1>
+-          </div>
+-          <div className="flex items-center space-x-4">
+-            <a href="/" className="text-gray-600 hover:text-gray-900">Dashboard</a>
+-            <a href="/pipeline" className="text-gray-600 hover:text-gray-900">Pipeline</a>
+-            <a href="/contacts" className="text-gray-600 hover:text-gray-900">Contacts</a>
+-          </div>
+-        </div>
+-      </div>
+-    </nav>
+-  );
+-}
+-
+-function ProgressiveApp() {
+-  return (
+-    <ThemeProvider>
+-      <DashboardLayoutProvider>
+-        <AIToolsProvider>
+-          <NavigationProvider>
+-            <VideoCallProvider>
+-              <div className="min-h-screen h-full w-full flex flex-col">
+-                <SimpleNavbar />
+-                <div className="flex-1 w-full overflow-hidden">
+-                  <Routes>
+-                    <Route path="/" element={<Dashboard />} />
+-                    <Route path="/dashboard" element={<Dashboard />} />
+-                    <Route path="/pipeline" element={<Pipeline />} />
+-                    <Route path="/contacts" element={<Contacts />} />
+-                    <Route path="*" element={<Dashboard />} />
+-                  </Routes>
+-                </div>
+-              </div>
+-            </VideoCallProvider>
+-          </NavigationProvider>
+-        </AIToolsProvider>
+-      </DashboardLayoutProvider>
+-    </ThemeProvider>
+-  );
+-}
+-
+-export default ProgressiveApp;
+diff --git a/src/SimpleApp.tsx b/src/SimpleApp.tsx
+deleted file mode 100644
+index 67e522e..0000000
+--- a/src/SimpleApp.tsx
++++ /dev/null
+@@ -1,32 +0,0 @@
+-import React from 'react';
+-
+-function SimpleApp() {
+-  console.log('🎯 SimpleApp is rendering');
+-  
+-  return (
+-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+-      <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full mx-4">
+-        <h1 className="text-2xl font-bold text-gray-800 mb-4">
+-          🚀 SmartCRM Loading Test
+-        </h1>
+-        <p className="text-gray-600 mb-4">
+-          If you can see this, the React app is working!
+-        </p>
+-        <div className="space-y-2 text-sm">
+-          <p><strong>Build Status:</strong> ✅ Success</p>
+-          <p><strong>Environment:</strong> {import.meta.env.MODE}</p>
+-          <p><strong>Supabase URL:</strong> {import.meta.env.VITE_SUPABASE_URL ? '✅ Set' : '❌ Missing'}</p>
+-          <p><strong>Supabase Key:</strong> {import.meta.env.VITE_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing'}</p>
+-        </div>
+-        <button 
+-          onClick={() => window.location.href = '/dashboard'}
+-          className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
+-        >
+-          Try Loading Dashboard
+-        </button>
+-      </div>
+-    </div>
+-  );
+-}
+-
+-export default SimpleApp;
+diff --git a/src/agents/AgentOrchestrator.ts b/src/agents/AgentOrchestrator.ts
+deleted file mode 100644
+index 6c2f972..0000000
+--- a/src/agents/AgentOrchestrator.ts
++++ /dev/null
+@@ -1,68 +0,0 @@
+-import { leadEnrichmentAgent } from './leadEnrichmentAgent';
+-import { aiSdrAgent } from './aiSdrAgent';
+-import { proposalGeneratorAgent } from './proposalGeneratorAgent';
+-import { personalizedEmailAgent } from './personalizedEmailAgent';
+-import { leadScoringAgent } from './leadScoringAgent';
+-import { aiAeAgent } from './aiAeAgent';
+-import { objectionHandlerAgent } from './objectionHandlerAgent';
+-import { coldOutreachCloserAgent } from './coldOutreachCloserAgent';
+-import { smartDemoBotAgent } from './smartDemoBotAgent';
+-import { followUpAgent } from './followUpAgent';
+-import { voiceAgent } from './voiceAgent';
+-import { smsCampaignerAgent } from './smsCampaignerAgent';
+-import { meetingsAgent } from './meetingsAgent';
+-import { aiDialerAgent } from './aiDialerAgent';
+-import { aiJourneysAgent } from './aiJourneysAgent';
+-import { whatsappNurturerAgent } from './whatsappNurturerAgent';
+-import { reengagementAgent } from './reengagementAgent';
+-
+-export async function runAgentWorkflow(agentId: string, input: unknown, setSteps?: (steps: unknown) => void) {
+-  switch (agentId) {
+-    // Contact Module Agents
+-    case "lead-enrichment":
+-      return await leadEnrichmentAgent(input, setSteps);
+-    case "ai-sdr":
+-      return await aiSdrAgent(input, setSteps);
+-    case "personalized-email":
+-      return await personalizedEmailAgent(input, setSteps);
+-    case "lead-scoring":
+-      return await leadScoringAgent(input, setSteps);
+-      
+-    // Deal Module Agents
+-    case "proposal-generator":
+-      return await proposalGeneratorAgent(input, setSteps);
+-    case "ai-ae":
+-      return await aiAeAgent(input, setSteps);
+-    case "objection-handler":
+-      return await objectionHandlerAgent(input, setSteps);
+-    case "cold-outreach-closer":
+-      return await coldOutreachCloserAgent(input, setSteps);
+-    case "smart-demo-bot":
+-      return await smartDemoBotAgent(input, setSteps);
+-      
+-    // Task Module Agents
+-    case "follow-up":
+-      return await followUpAgent(input, setSteps);
+-    case "voice-agent":
+-      return await voiceAgent(input, setSteps);
+-    case "sms-campaigner":
+-      return await smsCampaignerAgent(input, setSteps);
+-      
+-    // Calendar Module Agents
+-    case "meetings-agent":
+-      return await meetingsAgent(input, setSteps);
+-    case "ai-dialer":
+-      return await aiDialerAgent(input, setSteps);
+-    case "ai-journeys":
+-      return await aiJourneysAgent(input, setSteps);
+-      
+-    // Campaign Module Agents
+-    case "whatsapp-nurturer":
+-      return await whatsappNurturerAgent(input, setSteps);
+-    case "reengagement-agent":
+-      return await reengagementAgent(input, setSteps);
+-      
+-    default:
+-      throw new Error(`Unknown agent: ${agentId}`);
+-  }
+-}
+\ No newline at end of file
+diff --git a/src/agents/agentButtons.tsx b/src/agents/agentButtons.tsx
+deleted file mode 100644
+index 78f53dd..0000000
+--- a/src/agents/agentButtons.tsx
++++ /dev/null
+@@ -1,84 +0,0 @@
+-import React from 'react';
+-import { Brain, Target, FileText, MessageSquare, Shield, Zap, Video, Phone, Calendar, Mail, RefreshCw, Headphones, Send } from 'lucide-react';
+-
+-const agentIconMap: Record<string, { label: string; icon: React.ReactNode }> = {
+-  // Contact Module Agents
+-  'lead-enrichment': {
+-    label: 'Lead Enrichment',
+-    icon: <Brain size={18} className="text-blue-600" />
+-  },
+-  'ai-sdr': {
+-    label: 'SDR Sequence',
+-    icon: <Target size={18} className="text-purple-600" />
+-  },
+-  'personalized-email': {
+-    label: 'Personalized Email',
+-    icon: <Mail size={18} className="text-indigo-600" />
+-  },
+-  'lead-scoring': {
+-    label: 'Lead Scoring',
+-    icon: <Zap size={18} className="text-amber-600" />
+-  },
+-  
+-  // Deal Module Agents
+-  'ai-ae': {
+-    label: 'AI AE Demo',
+-    icon: <Video size={18} className="text-emerald-600" />
+-  },
+-  'objection-handler': {
+-    label: 'Objection Handler',
+-    icon: <Shield size={18} className="text-red-600" />
+-  },
+-  'cold-outreach-closer': {
+-    label: 'Outreach Closer',
+-    icon: <Send size={18} className="text-blue-600" />
+-  },
+-  'smart-demo-bot': {
+-    label: 'Smart Demo Bot',
+-    icon: <Video size={18} className="text-purple-600" />
+-  },
+-  'proposal-generator': {
+-    label: 'Proposal Generator',
+-    icon: <FileText size={18} className="text-amber-600" />
+-  },
+-  
+-  // Task Module Agents
+-  'follow-up': {
+-    label: 'Follow-Up',
+-    icon: <RefreshCw size={18} className="text-green-600" />
+-  },
+-  'voice-agent': {
+-    label: 'Voice Agent',
+-    icon: <Headphones size={18} className="text-indigo-600" />
+-  },
+-  'sms-campaigner': {
+-    label: 'SMS Campaigner',
+-    icon: <MessageSquare size={18} className="text-blue-600" />
+-  },
+-  
+-  // Calendar Module Agents
+-  'meetings-agent': {
+-    label: 'Meetings Agent',
+-    icon: <Calendar size={18} className="text-cyan-600" />
+-  },
+-  'ai-dialer': {
+-    label: 'AI Dialer',
+-    icon: <Phone size={18} className="text-blue-600" />
+-  },
+-  'ai-journeys': {
+-    label: 'AI Journeys',
+-    icon: <Zap size={18} className="text-violet-600" />
+-  },
+-  
+-  // Campaign Module Agents
+-  'whatsapp-nurturer': {
+-    label: 'WhatsApp Nurturer',
+-    icon: <MessageSquare size={18} className="text-green-600" />
+-  },
+-  'reengagement-agent': {
+-    label: 'Reengagement',
+-    icon: <RefreshCw size={18} className="text-orange-600" />
+-  }
+-};
+-
+-export default agentIconMap;
+\ No newline at end of file
+diff --git a/src/agents/aiAeAgent.ts b/src/agents/aiAeAgent.ts
+deleted file mode 100644
+index c24bb9b..0000000
+--- a/src/agents/aiAeAgent.ts
++++ /dev/null
+@@ -1,90 +0,0 @@
+-
+-
+-export async function aiAeAgent(input: unknown, setSteps?: (steps: unknown) => void) {
+-  const name = input.name || "there";
+-  const company = input.company || "your company";
+-  const dealTitle = input.title || "our solution";
+-  
+-  setSteps?.([{ step: "Preparing demo script..." }]);
+-  
+-  // Simulate API delay
+-  await new Promise(resolve => setTimeout(resolve, 1200));
+-  
+-  setSteps?.(prev => [...prev, { step: "Analyzing prospect needs..." }]);
+-  
+-  // Simulate API delay
+-  await new Promise(resolve => setTimeout(resolve, 1000));
+-  
+-  setSteps?.(prev => [...prev, { step: "Generating personalized demo flow..." }]);
+-  
+-  const demoScript = `
+-# Demo Script for ${company}: ${dealTitle}
+-
+-## Introduction (2 minutes)
+-- Thank ${name} for their time
+-- Confirm the agenda and their specific interests
+-- Brief overview of what we'll cover today
+-
+-## Company Overview (3 minutes)
+-- Quick introduction to our company and mission
+-- Highlight relevant customer success stories in ${input.industry || "their industry"}
+-- Mention our unique approach to solving their challenges
+-
+-## Product Demo (15 minutes)
+-1. Start with the dashboard overview
+-   - Show how it provides immediate value and insights
+-   - Highlight the AI-powered features
+-
+-2. Demonstrate the contact management system
+-   - Show how it automatically enriches lead data
+-   - Demonstrate the AI lead scoring functionality
+-
+-3. Present the deal pipeline
+-   - Show how it provides visibility and forecasting
+-   - Highlight the AI deal insights feature
+-
+-4. Showcase the AI assistant capabilities
+-   - Demonstrate how it can generate emails, call scripts, etc.
+-   - Show how it integrates with their workflow
+-
+-## Value Proposition (5 minutes)
+-- Summarize key benefits specific to ${company}'s needs
+-- Present ROI metrics and expected outcomes
+-- Address anticipated objections
+-
+-## Next Steps (5 minutes)
+-- Discuss implementation timeline
+-- Review pricing options
+-- Agree on follow-up actions
+-
+-## Q&A
+-- Be prepared for questions about:
+-  - Security and compliance
+-  - Integration with existing tools
+-  - Customization options
+-  - Support and training
+-`;
+-
+-  setSteps?.(prev => [...prev, { step: "Demo script generated", result: "Complete" }]);
+-  
+-  return {
+-    demoScript,
+-    keyTalkingPoints: [
+-      "AI-powered lead enrichment and scoring",
+-      "Automated follow-up sequences",
+-      "Real-time deal insights and recommendations",
+-      "Time savings of 5+ hours per week"
+-    ],
+-    anticipatedQuestions: [
+-      "How does your pricing compare to competitors?",
+-      "What kind of onboarding support do you provide?",
+-      "How long does implementation typically take?",
+-      "Can we integrate with our existing tools?"
+-    ],
+-    objectionHandling: {
+-      "Too expensive": "Focus on ROI and time savings",
+-      "We already have a CRM": "Highlight AI capabilities that their current solution lacks",
+-      "Not the right time": "Discuss implementation timeline flexibility"
+-    }
+-  };
+-}
+\ No newline at end of file
+diff --git a/src/agents/aiDialerAgent.ts b/src/agents/aiDialerAgent.ts
+deleted file mode 100644
+index 5615843..0000000
+--- a/src/agents/aiDialerAgent.ts
++++ /dev/null
+@@ -1,168 +0,0 @@
+-
+-
+-export async function aiDialerAgent(input: unknown, setSteps?: (steps: unknown) => void) {
+-  const name = input.name || "there";
+-  const company = input.company || "your company";
+-  const callPurpose = input.callPurpose || "follow-up";
+-  
+-  setSteps?.([{ step: "Preparing call script..." }]);
+-  
+-  // Simulate API delay
+-  await new Promise(resolve => setTimeout(resolve, 1000));
+-  
+-  setSteps?.(prev => [...prev, { step: "Researching contact information..." }]);
+-  
+-  // Simulate API delay
+-  await new Promise(resolve => setTimeout(resolve, 1200));
+-  
+-  setSteps?.(prev => [...prev, { step: "Generating call preparation notes..." }]);
+-  
+-  // Generate call script based on purpose
+-  let callScript = "";
+-  
+-  switch (callPurpose) {
+-    case "introduction":
+-      callScript = `
+-# Introduction Call Script for ${name} at ${company}
+-
+-## Opening (0:00-0:30)
+-"Hi, is this ${name}? This is [Your Name] from [Your Company]. Do you have a few minutes to chat?"
+-
+-[If yes, continue. If no, ask when would be a better time to call back.]
+-
+-"Great! I'm reaching out because we help companies like ${company} [brief value proposition]. I noticed that you [personalized observation about their role or company]."
+-
+-## Discovery Questions (0:30-3:00)
+-1. "Could you tell me a bit about your current process for [relevant business process]?"
+-2. "What are the biggest challenges you're facing with your current approach?"
+-3. "How are these challenges impacting your business?"
+-4. "What would solving these challenges mean for you and ${company}?"
+-
+-## Value Proposition (3:00-5:00)
+-"Based on what you've shared, I think we could help ${company} by:
+-1. [Benefit 1 tailored to their challenges]
+-2. [Benefit 2 tailored to their challenges]
+-3. [Benefit 3 tailored to their challenges]"
+-
+-## Next Steps (5:00-6:00)
+-"Would it make sense to schedule a more detailed conversation where I can show you exactly how we've helped similar companies?"
+-
+-[If yes, schedule meeting]
+-[If no, ask about objections and address them]
+-
+-## Closing (6:00-6:30)
+-"Thank you for your time today, ${name}. I'll send you an email with some more information and [next step]. Is there anything else you'd like me to include?"
+-`;
+-      break;
+-      
+-    case "follow-up":
+-      callScript = `
+-# Follow-Up Call Script for ${name} at ${company}
+-
+-## Opening (0:00-0:30)
+-"Hi ${name}, this is [Your Name] from [Your Company]. I'm following up on [previous interaction]. Is now still a good time to talk?"
+-
+-[If yes, continue. If no, ask when would be a better time to call back.]
+-
+-## Recap (0:30-1:00)
+-"Last time we spoke, we discussed [key points from previous conversation]. You mentioned that [specific challenge or goal they mentioned]."
+-
+-## Progress Update (1:00-2:30)
+-"Since then, I've [action you've taken, e.g., prepared a proposal, researched their specific issue, etc.]. I wanted to share what I found and discuss next steps."
+-
+-## Value Reinforcement (2:30-4:00)
+-"Based on what we've discussed, I believe we can help ${company} [specific value proposition tailored to their situation]. This would mean [tangible outcome for them]."
+-
+-## Addressing Concerns (4:00-5:00)
+-"Last time, you mentioned [concern or objection]. I wanted to address that by explaining [response to concern]."
+-
+-## Next Steps (5:00-6:00)
+-"What do you think would be the best next step for us? Would it make sense to [proposed next action]?"
+-
+-## Closing (6:00-6:30)
+-"Thank you for your time today, ${name}. I'll [follow-up action] by [specific date]. Is there anything else you need from me in the meantime?"
+-`;
+-      break;
+-      
+-    case "closing":
+-      callScript = `
+-# Closing Call Script for ${name} at ${company}
+-
+-## Opening (0:00-0:30)
+-"Hi ${name}, this is [Your Name] from [Your Company]. I'm calling to follow up on the proposal I sent over. Is now a good time to talk?"
+-
+-[If yes, continue. If no, ask when would be a better time to call back.]
+-
+-## Proposal Recap (0:30-1:30)
+-"I wanted to make sure you had a chance to review the proposal and see if you had any questions. To recap, we proposed [brief summary of proposal] at an investment of [price], which would help ${company} [key benefit]."
+-
+-## Addressing Final Concerns (1:30-3:00)
+-"Before we move forward, I wanted to check if you have any remaining questions or concerns that I can address?"
+-
+-[Listen and address each concern]
+-
+-## Value Reinforcement (3:00-4:00)
+-"As we discussed, implementing our solution would help ${company} [key benefit 1], [key benefit 2], and [key benefit 3], resulting in [expected outcome]."
+-
+-## Asking for the Business (4:00-5:00)
+-"Based on our discussions, I believe we have a solution that meets your needs. Are you ready to move forward with this?"
+-
+-[If yes, explain next steps]
+-[If no, identify objections and address them]
+-
+-## Next Steps (5:00-6:00)
+-"Great! Here's what happens next: [outline implementation process, timeline, etc.]"
+-
+-## Closing (6:00-6:30)
+-"Thank you for your business, ${name}. I'm excited to start working with ${company}. I'll send over the agreement right after this call, and you can expect [first deliverable] by [date]."
+-`;
+-      break;
+-      
+-    default:
+-      callScript = `
+-# Call Script for ${name} at ${company}
+-
+-## Opening (0:00-0:30)
+-"Hi ${name}, this is [Your Name] from [Your Company]. How are you today?"
+-
+-## Purpose (0:30-1:00)
+-"The reason for my call is [state purpose clearly and concisely]."
+-
+-## Value Proposition (1:00-2:00)
+-"We help companies like ${company} to [brief value proposition]."
+-
+-## Questions (2:00-4:00)
+-[Ask relevant questions about their needs and challenges]
+-
+-## Next Steps (4:00-5:00)
+-[Propose clear next steps based on the conversation]
+-
+-## Closing (5:00-5:30)
+-"Thank you for your time today, ${name}. I'll [follow-up action] by [specific date]."
+-`;
+-  }
+-  
+-  setSteps?.(prev => [...prev, { step: "Call preparation complete", result: "Complete" }]);
+-  
+-  return {
+-    callScript,
+-    contactInfo: {
+-      name,
+-      company,
+-      phone: "+1 (555) 123-4567", // Simulated phone number
+-      email: `${name.toLowerCase().replace(' ', '.')}@${company.toLowerCase().replace(' ', '')}.com`, // Simulated email
+-      timezone: "Eastern Time (ET)"
+-    },
+-    bestTimeToCall: "Tuesday-Thursday, 9am-11am or 2pm-4pm",
+-    preparationNotes: [
+-      "Review LinkedIn profile before calling",
+-      "Check recent company news",
+-      "Review previous interactions and notes"
+-    ],
+-    postCallActions: [
+-      "Send follow-up email with discussed information",
+-      "Update CRM with call notes",
+-      "Schedule follow-up task for 3 days later"
+-    ]
+-  };
+-}
+\ No newline at end of file
+diff --git a/src/agents/aiJourneysAgent.ts b/src/agents/aiJourneysAgent.ts
+deleted file mode 100644
+index 154d2e0..0000000
+--- a/src/agents/aiJourneysAgent.ts
++++ /dev/null
+@@ -1,429 +0,0 @@
+-
+-
+-export async function aiJourneysAgent(input: unknown, setSteps?: (steps: unknown) => void) {
+-  const name = input.name || "there";
+-  const company = input.company || "your company";
+-  const journeyType = input.journeyType || "onboarding";
+-  
+-  setSteps?.([{ step: "Creating customer journey..." }]);
+-  
+-  // Simulate API delay
+-  await new Promise(resolve => setTimeout(resolve, 1200));
+-  
+-  setSteps?.(prev => [...prev, { step: "Mapping touchpoints..." }]);
+-  
+-  // Simulate API delay
+-  await new Promise(resolve => setTimeout(resolve, 1500));
+-  
+-  setSteps?.(prev => [...prev, { step: "Generating content for each stage..." }]);
+-  
+-  // Generate journey based on type
+-  let journey = [];
+-  
+-  switch (journeyType) {
+-    case "onboarding":
+-      journey = [
+-        {
+-          day: 1,
+-          channel: "email",
+-          subject: `Welcome to [Your Company], ${name}!`,
+-          content: `Hi ${name},
+-
+-Welcome to [Your Company]! We're excited to have ${company} on board.
+-
+-Here's what you can expect over the next few weeks:
+-
+-1. Initial setup and configuration (Days 1-3)
+-2. Team training session (Days 4-7)
+-3. First success check-in (Day 14)
+-4. Advanced features walkthrough (Day 21)
+-
+-Your dedicated Customer Success Manager, [CSM Name], will be reaching out shortly to schedule your kickoff call.
+-
+-In the meantime, here are some resources to help you get started:
+-- [Quick Start Guide]
+-- [Video Tutorials]
+-- [Knowledge Base]
+-
+-If you have any questions, please don't hesitate to reach out.
+-
+-Best regards,
+-[Your Name]
+-[Your Company]`
+-        },
+-        {
+-          day: 3,
+-          channel: "email",
+-          subject: `${company}'s Kickoff Call - Schedule Now`,
+-          content: `Hi ${name},
+-
+-I hope you've had a chance to explore our platform. It's time to schedule your kickoff call where we'll:
+-
+-1. Configure your account settings
+-2. Import your initial data
+-3. Set up your first automation
+-4. Answer any questions you have
+-
+-Please use this link to schedule a time that works for you: [Calendly Link]
+-
+-Looking forward to helping you get started!
+-
+-Best regards,
+-[CSM Name]
+-Customer Success Manager`
+-        },
+-        {
+-          day: 7,
+-          channel: "email",
+-          subject: `How's your experience with [Your Company] so far?`,
+-          content: `Hi ${name},
+-
+-It's been a week since you started with us, and I wanted to check in on your experience so far.
+-
+-Have you been able to [key action 1] and [key action 2] yet?
+-
+-If you're running into any challenges, please let me know, and I'd be happy to help.
+-
+-Also, I've attached a guide on [relevant feature] that might be helpful for your team at ${company}.
+-
+-Best regards,
+-[CSM Name]`
+-        },
+-        {
+-          day: 14,
+-          channel: "call",
+-          subject: "14-Day Success Check-In",
+-          content: `
+-# 14-Day Success Check-In Call Script
+-
+-## Introduction
+-"Hi ${name}, this is [CSM Name] from [Your Company]. Today marks two weeks since you started using our platform, and I wanted to check in on your progress."
+-
+-## Questions to Ask
+-1. "How has your experience been so far?"
+-2. "Have you been able to [key action 1] and [key action 2]?"
+-3. "Are there any features you're finding particularly valuable?"
+-4. "Are there any challenges or roadblocks you're facing?"
+-
+-## Value Reinforcement
+-"I noticed that your team has already [positive observation]. That's great progress! Many of our customers see [typical result] after implementing this feature."
+-
+-## Next Steps
+-"Based on our conversation today, I recommend focusing on [recommendation]. I'll send you some resources on this after our call."
+-
+-## Closing
+-"Thank you for your time today. Our next check-in will be in two weeks, but please reach out if you need anything before then."
+-`
+-        },
+-        {
+-          day: 21,
+-          channel: "email",
+-          subject: `Unlock Advanced Features for ${company}`,
+-          content: `Hi ${name},
+-
+-Now that you've been using our platform for a few weeks, I wanted to introduce you to some advanced features that could be valuable for ${company}:
+-
+-1. [Advanced Feature 1]: This could help you [specific benefit]
+-2. [Advanced Feature 2]: Many companies like yours use this to [specific benefit]
+-3. [Advanced Feature 3]: This could save your team [time/money/resources]
+-
+-Would you be interested in a quick 30-minute session to explore these features?
+-
+-Best regards,
+-[CSM Name]`
+-        },
+-        {
+-          day: 30,
+-          channel: "email",
+-          subject: `Your First Month with [Your Company] - Review & Next Steps`,
+-          content: `Hi ${name},
+-
+-Congratulations on completing your first month with [Your Company]!
+-
+-Here's a summary of what you've accomplished:
+-- [Achievement 1]
+-- [Achievement 2]
+-- [Achievement 3]
+-
+-Based on your usage patterns, here are some recommendations for your next steps:
+-1. [Recommendation 1]
+-2. [Recommendation 2]
+-3. [Recommendation 3]
+-
+-I'd love to schedule a 30-minute review call to discuss your experience and plan for the next quarter. Would any of these times work for you?
+-- [Proposed Time 1]
+-- [Proposed Time 2]
+-- [Proposed Time 3]
+-
+-Best regards,
+-[CSM Name]`
+-        }
+-      ];
+-      break;
+-      
+-    case "reactivation":
+-      journey = [
+-        {
+-          day: 1,
+-          channel: "email",
+-          subject: `We miss you at [Your Company], ${name}`,
+-          content: `Hi ${name},
+-
+-I noticed that it's been a while since you've used our platform at ${company}, and I wanted to check in.
+-
+-We've made several improvements that I think would be valuable for your team:
+-
+-1. [New Feature 1]: This addresses [specific pain point]
+-2. [New Feature 2]: This could help you [specific benefit]
+-3. [New Feature 3]: This has helped similar companies achieve [specific result]
+-
+-Would you be open to a quick 15-minute call to discuss how these new features might benefit ${company}?
+-
+-Best regards,
+-[Your Name]`
+-        },
+-        {
+-          day: 5,
+-          channel: "email",
+-          subject: `${company}: Special offer for returning customers`,
+-          content: `Hi ${name},
+-
+-I wanted to follow up on my previous email and let you know that we're currently offering [special incentive] for returning customers.
+-
+-This would be a great opportunity to revisit our platform and see how our new features could help ${company} [achieve specific goal].
+-
+-This offer is available until [date], so I'd love to reconnect soon.
+-
+-Best regards,
+-[Your Name]`
+-        },
+-        {
+-          day: 10,
+-          channel: "call",
+-          subject: "Reactivation Call",
+-          content: `
+-# Reactivation Call Script
+-
+-## Introduction
+-"Hi ${name}, this is [Your Name] from [Your Company]. I've been trying to reach you regarding your account with us. Do you have a few minutes to chat?"
+-
+-## Reason for Call
+-"The reason I'm calling is that we've noticed you haven't been using our platform recently, and I wanted to understand if there were any specific reasons or challenges that led to that."
+-
+-## Listen and Address Concerns
+-[Listen to their feedback and address any concerns they raise]
+-
+-## Value Proposition
+-"Since you last used our platform, we've made several improvements that I think would be valuable for ${company}, including [new feature 1] and [new feature 2]."
+-
+-## Special Offer
+-"We're currently offering [special incentive] for returning customers, which would give you [specific benefit]."
+-
+-## Next Steps
+-"Would you be interested in a quick demo of the new features to see if they address your needs?"
+-
+-## Closing
+-"Thank you for your time today. I'll send you an email with the information we discussed, and I look forward to helping you get the most out of our platform."
+-`
+-        },
+-        {
+-          day: 14,
+-          channel: "email",
+-          subject: `Last chance: Special offer for ${company}`,
+-          content: `Hi ${name},
+-
+-I wanted to send one final note regarding our special offer for ${company}.
+-
+-The [special incentive] I mentioned is only available until [date], which is just a few days away.
+-
+-Many companies like yours have returned to our platform and are seeing great results with our new features:
+-
+-- [Company Example 1] achieved [specific result]
+-- [Company Example 2] improved [specific metric]
+-
+-If you're interested in learning more, please let me know and I'd be happy to schedule a quick call.
+-
+-Best regards,
+-[Your Name]`
+-        }
+-      ];
+-      break;
+-      
+-    case "nurture":
+-      journey = [
+-        {
+-          day: 1,
+-          channel: "email",
+-          subject: `Resources for ${company} based on our conversation`,
+-          content: `Hi ${name},
+-
+-Thank you for our recent conversation about ${company}'s needs.
+-
+-As promised, here are some resources that might be helpful:
+-
+-1. [Resource 1]: This addresses [specific topic you discussed]
+-2. [Resource 2]: This provides more information about [another topic]
+-3. [Case Study]: This shows how [similar company] achieved [specific result]
+-
+-Please let me know if you have any questions or if there's anything else I can help with.
+-
+-Best regards,
+-[Your Name]`
+-        },
+-        {
+-          day: 7,
+-          channel: "email",
+-          subject: `Thought you might find this interesting, ${name}`,
+-          content: `Hi ${name},
+-
+-I came across this [article/report/webinar] about [relevant topic] and thought it might be interesting for you given your role at ${company}.
+-
+-Here's the link: [Link]
+-
+-One key insight I found particularly relevant to your situation was [specific insight].
+-
+-Would love to hear your thoughts if you get a chance to check it out.
+-
+-Best regards,
+-[Your Name]`
+-        },
+-        {
+-          day: 14,
+-          channel: "email",
+-          subject: `Quick question about ${company}'s [specific challenge]`,
+-          content: `Hi ${name},
+-
+-In our previous conversation, you mentioned that ${company} is facing challenges with [specific challenge].
+-
+-I've been thinking about this, and I wanted to share how some of our customers have addressed similar challenges:
+-
+-1. [Company Example 1] implemented [solution] and saw [result]
+-2. [Company Example 2] approached it by [approach] and achieved [result]
+-
+-Would you be interested in learning more about how these approaches might work for ${company}?
+-
+-Best regards,
+-[Your Name]`
+-        },
+-        {
+-          day: 21,
+-          channel: "email",
+-          subject: `Invitation: Exclusive webinar for ${company}`,
+-          content: `Hi ${name},
+-
+-I'd like to invite you to an exclusive webinar we're hosting on [date] about [relevant topic].
+-
+-This would be particularly relevant for ${company} because:
+-
+-1. You'll learn about [specific benefit 1]
+-2. Our industry expert will discuss [specific benefit 2]
+-3. You'll have the opportunity to ask questions specific to your situation
+-
+-Here's the registration link: [Link]
+-
+-I hope you can join us!
+-
+-Best regards,
+-[Your Name]`
+-        },
+-        {
+-          day: 28,
+-          channel: "call",
+-          subject: "Check-in Call",
+-          content: `
+-# Nurture Check-in Call Script
+-
+-## Introduction
+-"Hi ${name}, this is [Your Name] from [Your Company]. I've been sharing some resources with you over the past few weeks, and I wanted to check in to see if you found them helpful."
+-
+-## Value-Add
+-"I also wanted to let you know about [new development] that might be relevant to ${company} given your interest in [topic]."
+-
+-## Gauging Interest
+-"Has anything changed in terms of your priorities or challenges since we last spoke?"
+-
+-## Soft Close
+-"Would it make sense to schedule a more detailed conversation about how we might be able to help with [specific challenge]?"
+-
+-## Closing
+-"Thank you for your time today. I'll continue to share relevant resources, and please don't hesitate to reach out if anything comes up."
+-`
+-        }
+-      ];
+-      break;
+-      
+-    default:
+-      journey = [
+-        {
+-          day: 1,
+-          channel: "email",
+-          subject: `Following up with ${company}`,
+-          content: `Hi ${name},
+-
+-Thank you for your interest in [Your Company].
+-
+-I'd love to learn more about ${company}'s needs and discuss how we might be able to help.
+-
+-Would you be available for a quick 15-minute call this week?
+-
+-Best regards,
+-[Your Name]`
+-        },
+-        {
+-          day: 3,
+-          channel: "email",
+-          subject: `Re: Following up with ${company}`,
+-          content: `Hi ${name},
+-
+-I wanted to follow up on my previous email about connecting to discuss ${company}'s needs.
+-
+-I'd be happy to share some insights on how companies similar to yours have [achieved specific result].
+-
+-Would any of these times work for a quick call?
+-- [Proposed Time 1]
+-- [Proposed Time 2]
+-- [Proposed Time 3]
+-
+-Best regards,
+-[Your Name]`
+-        },
+-        {
+-          day: 7,
+-          channel: "email",
+-          subject: `One last follow-up for ${company}`,
+-          content: `Hi ${name},
+-
+-I wanted to send one final note regarding [Your Company] and how we might be able to help ${company}.
+-
+-If you're interested in learning more, please let me know and I'd be happy to schedule a call at your convenience.
+-
+-If I don't hear back, I'll assume the timing isn't right and won't bother you again.
+-
+-Best regards,
+-[Your Name]`
+-        }
+-      ];
+-  }
+-  
+-  setSteps?.(prev => [...prev, { step: "Customer journey created", result: "Complete" }]);
+-  
+-  return {
+-    journeyType,
+-    journey,
+-    automationRules: {
+-      pauseIf: "Reply received or meeting scheduled",
+-      skipTo: "If specific action taken, skip to appropriate stage",
+-      reschedule: "If email bounces, retry in 24 hours"
+-    },
+-    performanceMetrics: {
+-      expectedOpenRate: "30-40%",
+-      expectedResponseRate: "10-15%",
+-      expectedConversionRate: "3-5%"
+-    },
+-    customizationNotes: [
+-      "Personalize each message with specific details about the recipient and company",
+-      "Adjust timing based on recipient engagement",
+-      "A/B test subject lines for optimal performance"
+-    ]
+-  };
+-}
+\ No newline at end of file
+diff --git a/src/agents/aiSdrAgent.ts b/src/agents/aiSdrAgent.ts
+deleted file mode 100644
+index da56655..0000000
+--- a/src/agents/aiSdrAgent.ts
++++ /dev/null
+@@ -1,35 +0,0 @@
+-import { callGemini } from "../services/callGemini";
+-import { callOpenAI } from "../services/callOpenAI";
+-
+-export async function aiSdrAgent(input: unknown, setSteps?: (steps: unknown) => void) {
+-  const name = input.name || "there";
+-  const company = input.company || "a company";
+-
+-  setSteps?.([{ step: "Researching company with Gemini..." }]);
+-  const geminiContext = await callGemini(
+-    `Find potential pain points or selling angles for a B2B cold email outreach targeting ${company}.`
+-  );
+-
+-  setSteps?.(prev => [...prev, { step: "Writing cold email sequence using OpenAI..." }]);
+-  const emailSequence = await callOpenAI(`
+-You are an expert SDR. Using the following context about ${company}, write a 3-step B2B cold email sequence targeting ${name}.
+-Context: ${geminiContext}
+-Structure:
+-1. First-touch email (value-driven)
+-2. Follow-up email (add new angle)
+-3. Final bump/check-in
+-Return as JSON:
+-{
+-  "first_email": "...",
+-  "follow_up": "...",
+-  "final_bump": "..."
+-}
+-  `);
+-
+-  try {
+-    const parsed = JSON.parse(emailSequence);
+-    return parsed;
+-  } catch {
+-    return { first_email: emailSequence, follow_up: "", final_bump: "" };
+-  }
+-}
+\ No newline at end of file
+diff --git a/src/agents/coldOutreachCloserAgent.ts b/src/agents/coldOutreachCloserAgent.ts
+deleted file mode 100644
+index c40fbc1..0000000
+--- a/src/agents/coldOutreachCloserAgent.ts
++++ /dev/null
+@@ -1,103 +0,0 @@
+-
+-
+-export async function coldOutreachCloserAgent(input: unknown, setSteps?: (steps: unknown) => void) {
+-  const name = input.name || "there";
+-  const company = input.company || "your company";
+-  const dealValue = input.value || "$10,000";
+-  
+-  setSteps?.([{ step: "Analyzing deal status..." }]);
+-  
+-  // Simulate API delay
+-  await new Promise(resolve => setTimeout(resolve, 1000));
+-  
+-  setSteps?.(prev => [...prev, { step: "Crafting closing sequence..." }]);
+-  
+-  // Simulate API delay
+-  await new Promise(resolve => setTimeout(resolve, 1500));
+-  
+-  setSteps?.(prev => [...prev, { step: "Generating urgency triggers..." }]);
+-  
+-  const closingSequence = {
+-    email1: {
+-      subject: `Next steps for ${company} (time-sensitive)`,
+-      body: `Hi ${name},
+-
+-I wanted to follow up on our previous conversations about implementing our solution at ${company}.
+-
+-Based on our discussions, I've put together a proposal that addresses your key requirements:
+-
+-1. Streamlined customer data management
+-2. AI-powered sales insights
+-3. Automated follow-up sequences
+-
+-To ensure you can take advantage of our Q2 pricing, we'd need to finalize the agreement by the end of this month. This would also allow us to get you onboarded before the busy season.
+-
+-Would you have 15 minutes this week to discuss the final details?
+-
+-Best regards,
+-[Your Name]`
+-    },
+-    
+-    email2: {
+-      subject: `Re: Next steps for ${company} (time-sensitive)`,
+-      body: `Hi ${name},
+-
+-I'm following up on my previous email about finalizing your ${company} account.
+-
+-Just a reminder that our Q2 pricing offer expires this Friday. After that, the investment would increase by approximately 15%.
+-
+-I've also attached a case study from [Similar Company] that achieved a 32% increase in sales efficiency within the first 3 months of implementation.
+-
+-Would tomorrow at 2pm work for a quick call to answer any remaining questions?
+-
+-Best regards,
+-[Your Name]`
+-    },
+-    
+-    finalCall: {
+-      subject: `Final opportunity: ${company} + [Our Company]`,
+-      body: `Hi ${name},
+-
+-This is my final follow-up regarding our solution for ${company}.
+-
+-I understand you're busy, so I've prepared everything needed to move forward:
+-
+-1. Implementation plan (attached)
+-2. Pricing breakdown showing ${dealValue} annual value
+-3. ROI calculator showing expected 3.5x return
+-
+-If I don't hear back, I'll assume the timing isn't right and close this opportunity in our system.
+-
+-Would you prefer to:
+-A) Schedule a quick call to finalize
+-B) Receive the agreement via email
+-C) Revisit this in the future
+-
+-Just reply with A, B, or C and I'll take care of the rest.
+-
+-Best regards,
+-[Your Name]`
+-    }
+-  };
+-  
+-  setSteps?.(prev => [...prev, { step: "Closing sequence generated", result: "Complete" }]);
+-  
+-  return {
+-    closingSequence,
+-    timingRecommendations: {
+-      email1: "Send immediately",
+-      email2: "Send 3 days after Email 1 if no response",
+-      finalCall: "Send 4 days after Email 2 if no response"
+-    },
+-    urgencyTriggers: [
+-      "Limited-time pricing",
+-      "End of quarter deadline",
+-      "Implementation timeline before busy season"
+-    ],
+-    closingTips: [
+-      "Personalize each message with specific details from previous conversations",
+-      "Include social proof relevant to their industry",
+-      "Make the final step as easy as possible with clear options"
+-    ]
+-  };
+-}
+\ No newline at end of file
+diff --git a/src/agents/composioAgentRunner.ts b/src/agents/composioAgentRunner.ts
+deleted file mode 100644
+index 5a76cdb..0000000
+--- a/src/agents/composioAgentRunner.ts
++++ /dev/null
+@@ -1,344 +0,0 @@
+-// Composio Agent Runner - Handles tool interactions and CRM data management
+-// Orchestrates actions through Composio API for external business tools
+-
+-import realApiService from '../services/realApiService';
+-
+-import { realAgentExecutor } from './realAgentExecutor';
+-import type { Goal } from '../data/goalsData';
+-
+-export interface ComposioAgentRequest {
+-  goal: Goal;
+-  entityId?: string;
+-  crmContext?: {
+-    contacts: unknown[];
+-    deals: unknown[];
+-    tasks: unknown[];
+-  };
+-  userPreferences?: unknown;
+-}
+-
+-export interface ComposioAgentResult {
+-  success: boolean;
+-  goalId: string;
+-  actionsCompleted: string[];
+-  toolsUsed: string[];
+-  businessImpact: string;
+-  crmUpdates?: {
+-    contactsCreated?: number;
+-    dealsUpdated?: number;
+-    tasksGenerated?: number;
+-  };
+-  nextRecommendations: string[];
+-  executionTime: number;
+-  confidence: number;
+-}
+-
+-export class ComposioAgentRunner {
+-  private agentSuite: unknown; // Will be injected via dependency injection
+-  
+-  constructor(agentSuite?: unknown) {
+-    // Initialize agent suite for Composio interactions via dependency injection
+-    this.agentSuite = agentSuite;
+-  }
+-  
+-  async executeGoal(request: ComposioAgentRequest): Promise<ComposioAgentResult> {
+-    const startTime = Date.now();
+-    const { goal, entityId = 'default', crmContext } = request;
+-    
+-    try {
+-      // Phase 1: Agent Analysis and Planning
+-      const _planningResult = await this.planExecution(goal, crmContext);
+-      
+-      // Phase 2: Tool Authentication and Setup
+-      const _toolsSetup = await this.setupRequiredTools(goal.toolsNeeded, entityId);
+-      
+-      // Phase 3: Execute Primary Agent Action
+-      const executionResult = await realAgentExecutor.executeAgent({
+-        goalId: goal.id,
+-        agentName: goal.agentsRequired[0] || 'Primary Automation Agent',
+-        action: goal.description,
+-        toolsNeeded: goal.toolsNeeded,
+-        entityId,
+-        useComposio: true,
+-        context: crmContext
+-      });
+-      
+-      // Phase 4: Execute Composio Tool Actions
+-      const toolActions = await this.executeToolActions(goal, entityId, crmContext);
+-      
+-      // Phase 5: Update CRM and Generate Results
+-      const crmUpdates = await this.updateCRMData(goal, toolActions, crmContext);
+-      
+-      return {
+-        success: true,
+-        goalId: goal.id,
+-        actionsCompleted: [
+-          `Executed ${goal.agentsRequired.join(', ')} agents`,
+-          ...toolActions.map(action => `Completed ${action.tool}: ${action.description}`),
+-          'Updated CRM with automation results'
+-        ],
+-        toolsUsed: goal.toolsNeeded,
+-        businessImpact: this.calculateBusinessImpact(goal, toolActions),
+-        crmUpdates,
+-        nextRecommendations: this.generateRecommendations(goal, executionResult),
+-        executionTime: Date.now() - startTime,
+-        confidence: executionResult.confidence || 0.85
+-      };
+-      
+-    } catch (error) {
+-      return {
+-        success: false,
+-        goalId: goal.id,
+-        actionsCompleted: [],
+-        toolsUsed: [],
+-        businessImpact: 'Execution failed - no business impact achieved',
+-        nextRecommendations: [
+-          'Review configuration and API connections',
+-          'Check tool authentication status',
+-          'Retry execution after resolving issues'
+-        ],
+-        executionTime: Date.now() - startTime,
+-        confidence: 0
+-      };
+-    }
+-  }
+-  
+-  private async planExecution(goal: Goal, crmContext?: unknown) {
+-    // Use AI to analyze goal and create execution plan
+-    const planningPrompt = `Analyze business automation goal and create execution plan:
+-
+-Goal: ${goal.title}
+-Description: ${goal.description}
+-Required Agents: ${goal.agentsRequired.join(', ')}
+-Tools Needed: ${goal.toolsNeeded.join(', ')}
+-Business Impact: ${goal.businessImpact}
+-ROI Expected: ${goal.roi}
+-
+-CRM Context: ${crmContext ? `${crmContext.contacts?.length || 0} contacts, ${crmContext.deals?.length || 0} deals, ${crmContext.tasks?.length || 0} tasks` : 'No CRM context'}
+-
+-Create a step-by-step execution plan with specific actions for each tool and agent.`;
+-    
+-    return await realApiService.callOpenAI(planningPrompt, 'o1-mini');
+-  }
+-  
+-  private async setupRequiredTools(toolsNeeded: string[], entityId: string) {
+-    const setupResults = [];
+-    
+-    for (const toolId of toolsNeeded) {
+-      try {
+-        const authResult = await this.agentSuite.authenticateApp(toolId, entityId);
+-        setupResults.push({
+-          tool: toolId,
+-          status: authResult.success ? 'connected' : 'failed',
+-          message: authResult.message || authResult.error
+-        });
+-      } catch (error) {
+-        setupResults.push({
+-          tool: toolId,
+-          status: 'failed',
+-          message: error instanceof Error ? error.message : 'Authentication failed'
+-        });
+-      }
+-    }
+-    
+-    return setupResults;
+-  }
+-  
+-  private async executeToolActions(goal: Goal, entityId: string, crmContext?: unknown) {
+-    const toolActions = [];
+-    
+-    // Execute actions based on goal requirements and available tools
+-    for (const toolId of goal.toolsNeeded) {
+-      try {
+-        let actionResult;
+-        
+-        switch (toolId) {
+-          case 'gmail':
+-            actionResult = await this.executeEmailActions(goal, entityId, crmContext);
+-            break;
+-          case 'google_calendar':
+-            actionResult = await this.executeCalendarActions(goal, entityId, crmContext);
+-            break;
+-          case 'linkedin':
+-            actionResult = await this.executeLinkedInActions(goal, entityId, crmContext);
+-            break;
+-          case 'slack':
+-            actionResult = await this.executeSlackActions(goal, entityId, crmContext);
+-            break;
+-          case 'hubspot':
+-          case 'salesforce':
+-            actionResult = await this.executeCRMActions(goal, toolId, entityId, crmContext);
+-            break;
+-          default:
+-            actionResult = await this.executeGenericAction(goal, toolId, entityId);
+-        }
+-        
+-        if (actionResult) {
+-          toolActions.push(actionResult);
+-        }
+-      } catch (error) {
+-        console.warn(`Failed to execute ${toolId} action:`, error);
+-      }
+-    }
+-    
+-    return toolActions;
+-  }
+-  
+-  private async executeEmailActions(goal: Goal, entityId: string, crmContext?: unknown) {
+-    if (!crmContext?.contacts?.length) return null;
+-    
+-    // Send personalized emails to high-priority contacts
+-    const targetContacts = crmContext.contacts.slice(0, 3); // Limit for demo
+-    const emailsSent = [];
+-    
+-    for (const contact of targetContacts) {
+-      try {
+-        await this.agentSuite.sendGmailEmail({
+-          to: contact.email,
+-          subject: `Automated Outreach: ${goal.title}`,
+-          body: `Hi ${contact.name},\n\nOur system has identified you as a high-priority contact for ${goal.businessImpact}.\n\nBest regards,\nAutomation Team`,
+-          entityId
+-        });
+-        emailsSent.push(contact.email);
+-      } catch (error) {
+-        console.warn(`Failed to send email to ${contact.email}`);
+-      }
+-    }
+-    
+-    return {
+-      tool: 'gmail',
+-      description: `Sent ${emailsSent.length} personalized emails`,
+-      details: emailsSent,
+-      impact: 'Improved prospect engagement'
+-    };
+-  }
+-  
+-  private async executeCalendarActions(goal: Goal, entityId: string, crmContext?: unknown) {
+-    const now = new Date();
+-    const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+-    
+-    try {
+-      await this.agentSuite.createGoogleCalendarEvent({
+-        title: `Follow-up: ${goal.title}`,
+-        startTime: nextWeek.toISOString(),
+-        endTime: new Date(nextWeek.getTime() + 60 * 60 * 1000).toISOString(),
+-        description: `Review results and optimize ${goal.description}`,
+-        entityId
+-      });
+-      
+-      return {
+-        tool: 'google_calendar',
+-        description: 'Scheduled follow-up meeting',
+-        details: nextWeek.toDateString(),
+-        impact: 'Improved accountability and follow-through'
+-      };
+-    } catch (error) {
+-      return null;
+-    }
+-  }
+-  
+-  private async executeLinkedInActions(goal: Goal, entityId: string, crmContext?: unknown) {
+-    // Simulate LinkedIn outreach for lead generation goals
+-    if (goal.category === 'Sales' && crmContext?.contacts?.length) {
+-      return {
+-        tool: 'linkedin',
+-        description: 'Automated LinkedIn outreach sequence',
+-        details: `Targeted ${crmContext.contacts.length} prospects`,
+-        impact: 'Expanded network and lead pipeline'
+-      };
+-    }
+-    return null;
+-  }
+-  
+-  private async executeSlackActions(goal: Goal, entityId: string, crmContext?: unknown) {
+-    try {
+-      await this.agentSuite.postToSlack({
+-        channel: '#automation-updates',
+-        message: `🤖 Automation Goal "${goal.title}" completed successfully!\n\nBusiness Impact: ${goal.businessImpact}\nExpected ROI: ${goal.roi}`,
+-        entityId
+-      });
+-      
+-      return {
+-        tool: 'slack',
+-        description: 'Posted automation update to team',
+-        details: '#automation-updates channel',
+-        impact: 'Improved team communication and transparency'
+-      };
+-    } catch (error) {
+-      return null;
+-    }
+-  }
+-  
+-  private async executeCRMActions(goal: Goal, toolId: string, entityId: string, crmContext?: unknown) {
+-    // Simulate CRM updates and data synchronization
+-    return {
+-      tool: toolId,
+-      description: 'Synchronized CRM data and updated records',
+-      details: `Updated ${crmContext?.contacts?.length || 0} contact records`,
+-      impact: 'Improved data consistency and lead tracking'
+-    };
+-  }
+-  
+-  private async executeGenericAction(goal: Goal, toolId: string, entityId: string) {
+-    // Generic action execution for any tool
+-    return {
+-      tool: toolId,
+-      description: `Executed ${toolId} automation workflow`,
+-      details: `Completed actions for ${goal.title}`,
+-      impact: goal.businessImpact
+-    };
+-  }
+-  
+-  private async updateCRMData(goal: Goal, toolActions: unknown[], crmContext?: unknown) {
+-    // Simulate CRM updates based on goal execution
+-    const updates = {
+-      contactsCreated: 0,
+-      dealsUpdated: 0,
+-      tasksGenerated: 0
+-    };
+-    
+-    // Generate updates based on goal type and actions
+-    if (goal.category === 'Sales') {
+-      updates.contactsCreated = toolActions.filter(a => a.tool === 'linkedin').length * 2;
+-      updates.dealsUpdated = Math.min(crmContext?.deals?.length || 0, 3);
+-    }
+-    
+-    if (goal.category === 'Automation') {
+-      updates.tasksGenerated = toolActions.length * 2;
+-    }
+-    
+-    return updates;
+-  }
+-  
+-  private calculateBusinessImpact(goal: Goal, toolActions: unknown[]): string {
+-    const baseImpact = goal.businessImpact;
+-    const toolsUsedCount = toolActions.length;
+-    const successfulActions = toolActions.filter(a => a.impact).length;
+-    
+-    if (successfulActions >= toolsUsedCount * 0.8) {
+-      return `${baseImpact} - Exceeded expectations with ${successfulActions}/${toolsUsedCount} successful tool integrations`;
+-    } else if (successfulActions >= toolsUsedCount * 0.5) {
+-      return `${baseImpact} - Met expectations with ${successfulActions}/${toolsUsedCount} successful integrations`;
+-    } else {
+-      return `${baseImpact} - Partial success with ${successfulActions}/${toolsUsedCount} integrations completed`;
+-    }
+-  }
+-  
+-  private generateRecommendations(goal: Goal, executionResult: unknown): string[] {
+-    const recommendations = [
+-      `Monitor ${goal.successMetrics.join(', ')} over the next 30 days`,
+-      'Review automation performance and optimize workflows',
+-      'Expand successful patterns to additional business processes'
+-    ];
+-    
+-    if (executionResult.confidence > 0.8) {
+-      recommendations.push('Consider implementing similar automation for related processes');
+-    } else {
+-      recommendations.push('Review and improve tool configurations for better results');
+-    }
+-    
+-    return recommendations;
+-  }
+-}
+-
+-export const composioAgentRunner = new ComposioAgentRunner();
+\ No newline at end of file
+diff --git a/src/agents/followUpAgent.ts b/src/agents/followUpAgent.ts
+deleted file mode 100644
+index 929f278..0000000
+--- a/src/agents/followUpAgent.ts
++++ /dev/null
+@@ -1,99 +0,0 @@
+-
+-
+-export async function followUpAgent(input: unknown, setSteps?: (steps: unknown) => void) {
+-  const name = input.name || "there";
+-  const company = input.company || "your company";
+-  const lastInteraction = input.lastInteraction || "our previous conversation";
+-  const daysElapsed = input.daysElapsed || 7;
+-  
+-  setSteps?.([{ step: "Analyzing previous interactions..." }]);
+-  
+-  // Simulate API delay
+-  await new Promise(resolve => setTimeout(resolve, 1000));
+-  
+-  setSteps?.(prev => [...prev, { step: "Determining optimal follow-up approach..." }]);
+-  
+-  // Simulate API delay
+-  await new Promise(resolve => setTimeout(resolve, 1200));
+-  
+-  setSteps?.(prev => [...prev, { step: "Generating follow-up message..." }]);
+-  
+-  // Determine follow-up type based on days elapsed
+-  let followUpType = "gentle";
+-  if (daysElapsed > 14) {
+-    followUpType = "reengagement";
+-  } else if (daysElapsed > 7) {
+-    followUpType = "value-add";
+-  }
+-  
+-  // Generate follow-up message based on type
+-  let followUpMessage = "";
+-  
+-  switch (followUpType) {
+-    case "gentle":
+-      followUpMessage = `
+-Subject: Quick follow-up regarding ${lastInteraction}
+-
+-Hi ${name},
+-
+-I hope you've been having a productive week. I wanted to follow up on ${lastInteraction} and see if you had any questions or if there's anything I can help clarify.
+-
+-I'm available for a quick call this week if that would be helpful.
+-
+-Best regards,
+-[Your Name]
+-      `;
+-      break;
+-      
+-    case "value-add":
+-      followUpMessage = `
+-Subject: Thought you might find this useful, ${name}
+-
+-Hi ${name},
+-
+-I was thinking about our discussion regarding ${lastInteraction} and came across this resource that I thought might be valuable for ${company}:
+-
+-[Link to relevant industry report/case study/article]
+-
+-This addresses some of the challenges we discussed, particularly around [specific challenge].
+-
+-I'm happy to discuss how these insights might apply to your specific situation at ${company}. Would you have 15 minutes this week for a quick call?
+-
+-Best regards,
+-[Your Name]
+-      `;
+-      break;
+-      
+-    case "reengagement":
+-      followUpMessage = `
+-Subject: Reconnecting with ${company}
+-
+-Hi ${name},
+-
+-It's been a while since we discussed ${lastInteraction}, and I wanted to check in to see how things have progressed at ${company}.
+-
+-Have you made any decisions regarding the challenges we discussed? I'd be happy to share some updated information on how we've helped similar companies in your industry achieve [specific result].
+-
+-Would it make sense to reconnect briefly this week?
+-
+-Best regards,
+-[Your Name]
+-      `;
+-      break;
+-  }
+-  
+-  setSteps?.(prev => [...prev, { step: "Follow-up message generated", result: "Complete" }]);
+-  
+-  return {
+-    followUpType,
+-    followUpMessage,
+-    recommendedChannel: daysElapsed > 10 ? "email + phone" : "email",
+-    bestTimeToSend: "Tuesday or Wednesday morning between 9-11am",
+-    nextStepRecommendation: daysElapsed > 14 ? "Schedule a call if no response" : "Wait 3-5 days before next follow-up",
+-    alternateApproaches: [
+-      "Connect on LinkedIn with a personalized message",
+-      "Share a relevant case study",
+-      "Introduce a mutual connection if available"
+-    ]
+-  };
+-}
+\ No newline at end of file
+diff --git a/src/agents/leadEnrichmentAgent.ts b/src/agents/leadEnrichmentAgent.ts
+deleted file mode 100644
+index 7aa135b..0000000
+--- a/src/agents/leadEnrichmentAgent.ts
++++ /dev/null
+@@ -1,36 +0,0 @@
+-import { callGemini } from "../services/callGemini";
+-
+-export async function leadEnrichmentAgent(input: unknown, setSteps?: (steps: unknown) => void) {
+-  const name = input.name || "Unknown";
+-  const company = input.company || "Unknown";
+-  
+-  // Simulate steps for UI feedback
+-  setSteps?.([{ step: "Researching contact information..." }]);
+-  
+-  // Simulate API delay
+-  await new Promise(resolve => setTimeout(resolve, 1500));
+-  
+-  setSteps?.(prev => [...prev, { step: "Analyzing company data..." }]);
+-  
+-  // Simulate API delay
+-  await new Promise(resolve => setTimeout(resolve, 1500));
+-  
+-  // Call Gemini API (simulated for demo)
+-  const enrichedData = await callGemini(
+-    `Provide enriched information about ${name} who works at ${company}. Include likely job responsibilities, potential pain points, and business challenges they might face.`
+-  );
+-  
+-  setSteps?.(prev => [...prev, { step: "Generating insights...", result: "Complete" }]);
+-  
+-  return {
+-    name,
+-    company,
+-    enrichedProfile: enrichedData || `${name} works at ${company}. They likely focus on business growth and operational efficiency.`,
+-    potentialPainPoints: [
+-      "Managing customer relationships at scale",
+-      "Tracking sales pipeline effectively",
+-      "Generating accurate forecasts"
+-    ],
+-    recommendedApproach: "Focus on how our solution can streamline their sales process and provide better visibility into customer relationships."
+-  };
+-}
+\ No newline at end of file
+diff --git a/src/agents/leadScoringAgent.ts b/src/agents/leadScoringAgent.ts
+deleted file mode 100644
+index 95ba52a..0000000
+--- a/src/agents/leadScoringAgent.ts
++++ /dev/null
+@@ -1,59 +0,0 @@
+-
+-
+-export async function leadScoringAgent(input: unknown, setSteps?: (steps: unknown) => void) {
+-  const name = input.name || "Unknown";
+-  const company = input.company || "Unknown";
+-  const email = input.email || "";
+-  const position = input.position || "";
+-  const industry = input.industry || "Unknown";
+-  
+-  setSteps?.([{ step: "Analyzing contact profile..." }]);
+-  
+-  // Simulate API delay
+-  await new Promise(resolve => setTimeout(resolve, 1000));
+-  
+-  setSteps?.(prev => [...prev, { step: "Evaluating engagement metrics..." }]);
+-  
+-  // Simulate API delay
+-  await new Promise(resolve => setTimeout(resolve, 1200));
+-  
+-  setSteps?.(prev => [...prev, { step: "Checking firmographic data..." }]);
+-  
+-  // Simulate API delay
+-  await new Promise(resolve => setTimeout(resolve, 800));
+-  
+-  setSteps?.(prev => [...prev, { step: "Calculating lead score..." }]);
+-  
+-  // Calculate a score between 0-100
+-  const baseScore = Math.floor(Math.random() * 40) + 40; // 40-80 range
+-  
+-  // Adjust score based on available data
+-  let adjustedScore = baseScore;
+-  if (position.toLowerCase().includes('cto') || position.toLowerCase().includes('ceo')) adjustedScore += 10;
+-  if (industry === 'Technology' || industry === 'Financial Services') adjustedScore += 5;
+-  if (!email) adjustedScore -= 15;
+-  
+-  // Cap at 100
+-  const finalScore = Math.min(100, adjustedScore);
+-  
+-  setSteps?.(prev => [...prev, { step: "Lead scoring complete", result: "Complete" }]);
+-  
+-  return {
+-    name,
+-    company,
+-    leadScore: finalScore,
+-    scoringFactors: {
+-      demographicScore: Math.floor(Math.random() * 100),
+-      engagementScore: Math.floor(Math.random() * 100),
+-      behavioralScore: Math.floor(Math.random() * 100),
+-      technographicScore: Math.floor(Math.random() * 100)
+-    },
+-    priorityLevel: finalScore >= 80 ? "High" : finalScore >= 60 ? "Medium" : "Low",
+-    recommendedActions: [
+-      finalScore >= 80 ? "Immediate sales outreach" : "Nurture with targeted content",
+-      "Schedule a discovery call",
+-      "Send personalized case study"
+-    ],
+-    nextBestAction: finalScore >= 80 ? "Direct call" : "Email sequence"
+-  };
+-}
+\ No newline at end of file
+diff --git a/src/agents/meetingsAgent.ts b/src/agents/meetingsAgent.ts
+deleted file mode 100644
+index 5a2f913..0000000
+--- a/src/agents/meetingsAgent.ts
++++ /dev/null
+@@ -1,142 +0,0 @@
+-
+-
+-export async function meetingsAgent(input: unknown, setSteps?: (steps: unknown) => void) {
+-  const name = input.name || "there";
+-  const company = input.company || "your company";
+-  const meetingType = input.meetingType || "discovery";
+-  
+-  setSteps?.([{ step: "Checking calendar availability..." }]);
+-  
+-  // Simulate API delay
+-  await new Promise(resolve => setTimeout(resolve, 1000));
+-  
+-  setSteps?.(prev => [...prev, { step: "Generating meeting invitation..." }]);
+-  
+-  // Simulate API delay
+-  await new Promise(resolve => setTimeout(resolve, 1200));
+-  
+-  // Generate meeting details based on type
+-  let meetingDetails = {
+-    subject: "",
+-    description: "",
+-    duration: 30,
+-    proposedTimes: []
+-  };
+-  
+-  switch (meetingType) {
+-    case "discovery":
+-      meetingDetails = {
+-        subject: `${company} + [Your Company]: Discovery Call`,
+-        description: `Hi ${name},
+-
+-I'm looking forward to our conversation about ${company}'s needs and how our solution might help.
+-
+-During this call, I'd like to:
+-1. Learn more about your current processes
+-2. Understand your key challenges
+-3. Discuss how our platform might address those challenges
+-4. Answer any questions you have
+-
+-Please feel free to invite any colleagues who might benefit from joining.
+-
+-Best regards,
+-[Your Name]`,
+-        duration: 30,
+-        proposedTimes: [
+-          new Date(Date.now() + 86400000 * 2).toISOString(), // 2 days from now
+-          new Date(Date.now() + 86400000 * 3).toISOString(), // 3 days from now
+-          new Date(Date.now() + 86400000 * 4).toISOString()  // 4 days from n
