@@ -51,3 +51,10 @@ cypress/screenshots/
 playwright-report/
 test-results/
 coverage-final.json
+# Bundles/backups/artifacts
+extracted/
+backup_pre_friday-1/
+attached_assets/
+temp_zip_contents/
+*.zip
+node_modules/
