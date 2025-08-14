@@ -2,11 +2,15 @@ import React, { useState, useCallback } from 'react';
 import { CheckCircle, XCircle, AlertTriangle, Zap, Shield, Crown, User, Eye, EyeOff, Download, Upload, RefreshCw, Target } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 
+type RoleType = 'user' | 'admin' | 'super_admin';
+type PlanType = 'free' | 'basic' | 'professional' | 'enterprise';
+type SeverityType = 'error' | 'warning' | 'info';
+
 interface RoleAssignmentData {
   email: string;
   currentRole: string;
-  newRole: 'user' | 'admin' | 'super_admin';
-  subscriptionPlan: 'free' | 'basic' | 'professional' | 'enterprise';
+  newRole: RoleType;
+  subscriptionPlan: PlanType;
   permissions: string[];
   status: 'pending' | 'success' | 'error' | 'warning';
   errorMessage?: string;
@@ -18,7 +22,7 @@ interface ValidationError {
   row: number;
   column: string;
   error: string;
-  severity: 'error' | 'warning' | 'info';
+  severity: SeverityType;
   suggestion?: string;
 }
 
@@ -37,15 +41,15 @@ export const MassRoleAssignment: React.FC<MassRoleAssignmentProps> = ({
   const [aiValidationEnabled, setAiValidationEnabled] = useState(true);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [bulkRole, setBulkRole] = useState<'user' | 'admin' | 'super_admin'>('user');
-  const [bulkPlan, setBulkPlan] = useState<'free' | 'basic' | 'professional' | 'enterprise'>('free');
+  const [bulkPlan, setBulkPlan] = useState<PlanType>('free');
 
-  const roleHierarchy = {
+  const roleHierarchy: Record<RoleType, number> = {
     'user': 1,
     'admin': 2,
     'super_admin': 3
   };
 
-  const permissionsByRole = {
+  const permissionsByRole: Record<RoleType, string[]> = {
     'user': ['view_contacts', 'edit_own_contacts', 'view_deals', 'edit_own_deals'],
     'admin': ['view_contacts', 'edit_contacts', 'view_deals', 'edit_deals', 'view_users', 'manage_team'],
     'super_admin': ['all_permissions', 'manage_platform', 'manage_users', 'view_analytics', 'system_config']
@@ -60,21 +64,29 @@ export const MassRoleAssignment: React.FC<MassRoleAssignmentProps> = ({
 
   for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',').map(v => v.trim());
-      const rowData: unknown = {};
+      const rowData: Record<string, string> = {} as Record<string, string>;
       
       headers.forEach((header, index) => {
-        rowData[header] = values[index];
+        rowData[header] = (values[index] ?? '').toString();
       });
 
       // AI-powered validation
-      const validation = await aiValidateRow(rowData, i + 1);
+      const validation = await aiValidateRow(rowData as Record<string, any>, i + 1);
       
+      const email = rowData.email || '';
+      const newRoleStr = (rowData.newrole || rowData.role || 'user').toLowerCase();
+      const validRoles: RoleType[] = ['user', 'admin', 'super_admin'];
+      const newRole: RoleType = (validRoles as string[]).includes(newRoleStr) ? (newRoleStr as RoleType) : 'user';
+      const planStr = (rowData.subscriptionplan || rowData.plan || 'free').toLowerCase();
+      const validPlans: PlanType[] = ['free', 'basic', 'professional', 'enterprise'];
+      const plan: PlanType = (validPlans as string[]).includes(planStr) ? (planStr as PlanType) : 'free';
+
       const assignment: RoleAssignmentData = {
-        email: rowData.email || '',
-        currentRole: findCurrentRole(rowData.email),
-        newRole: rowData.newrole || rowData.role || 'user',
-        subscriptionPlan: rowData.subscriptionplan || rowData.plan || 'free',
-        permissions: permissionsByRole[rowData.newrole] || permissionsByRole['user'],
+        email,
+        currentRole: findCurrentRole(email),
+        newRole,
+        subscriptionPlan: plan,
+        permissions: permissionsByRole[newRole],
         status: validation.isValid ? 'pending' : 'error',
         errorMessage: validation.error,
         aiSuggestion: validation.suggestion,
@@ -88,7 +100,7 @@ export const MassRoleAssignment: React.FC<MassRoleAssignmentProps> = ({
           row: i + 1,
           column: validation.errorColumn || 'general',
           error: validation.error || 'Validation failed',
-          severity: validation.severity || 'error',
+          severity: (validation.severity as SeverityType) || 'error',
           suggestion: validation.suggestion
         });
       }
@@ -98,7 +110,7 @@ export const MassRoleAssignment: React.FC<MassRoleAssignmentProps> = ({
     return assignments;
   };
 
-  const aiValidateRow = async (rowData: any, rowNumber: number) => {
+  const aiValidateRow = async (rowData: Record<string, any>, _rowNumber: number) => {
     if (!aiValidationEnabled) {
       return { isValid: true, confidence: 1 };
     }
@@ -118,8 +130,8 @@ export const MassRoleAssignment: React.FC<MassRoleAssignmentProps> = ({
       }
 
       // Role validation with AI suggestions
-      const validRoles = ['user', 'admin', 'super_admin'];
-      if (!validRoles.includes(rowData.newrole)) {
+  const validRoles: RoleType[] = ['user', 'admin', 'super_admin'];
+  if (!validRoles.includes(rowData.newrole as RoleType)) {
         const suggestion = findClosestRole(rowData.newrole);
         return {
           isValid: false,
@@ -132,8 +144,9 @@ export const MassRoleAssignment: React.FC<MassRoleAssignmentProps> = ({
       }
 
       // Permission escalation warning
-      const currentRole = findCurrentRole(rowData.email);
-      if (roleHierarchy[rowData.newrole] > roleHierarchy[currentRole]) {
+  const currentRole = findCurrentRole(rowData.email);
+  const targetRole = (rowData.newrole as RoleType);
+  if (roleHierarchy[targetRole] > roleHierarchy[currentRole]) {
         return {
           isValid: true,
           error: 'Role escalation detected',
@@ -144,7 +157,7 @@ export const MassRoleAssignment: React.FC<MassRoleAssignmentProps> = ({
       }
 
       // AI-powered business logic validation
-      const businessValidation = await validateBusinessLogic(rowData);
+  const businessValidation = await validateBusinessLogic(rowData);
       
       return {
         isValid: businessValidation.isValid,
@@ -163,7 +176,7 @@ export const MassRoleAssignment: React.FC<MassRoleAssignmentProps> = ({
     }
   };
 
-  const validateBusinessLogic = async (rowData: unknown) => {
+  const validateBusinessLogic = async (rowData: Record<string, any>) => {
     // Simulate AI business logic validation
     const suspiciousPatterns = [
       { pattern: /admin.*temp|temp.*admin/i, message: 'Temporary admin roles detected' },
@@ -172,7 +185,8 @@ export const MassRoleAssignment: React.FC<MassRoleAssignmentProps> = ({
     ];
 
     for (const { pattern, message } of suspiciousPatterns) {
-      if (pattern.test(`${rowData.email} ${rowData.newrole}`)) {
+      const text = `${rowData?.email ?? ''} ${rowData?.newrole ?? ''}`;
+      if (pattern.test(text)) {
         return {
           isValid: true,
           error: message,
@@ -186,13 +200,14 @@ export const MassRoleAssignment: React.FC<MassRoleAssignmentProps> = ({
     return { isValid: true, confidence: 0.95 };
   };
 
-  const findCurrentRole = (email: string): string => {
-    const user = users.find(u => u.email === email);
-    return user?.role || 'user';
+  const findCurrentRole = (email: string): RoleType => {
+    const list = (users as Array<{ email?: string; role?: string }>);
+    const user = list.find(u => u?.email === email);
+    const role = (user?.role || 'user').toLowerCase();
+    return (['user','admin','super_admin'].includes(role) ? (role as RoleType) : 'user');
   };
 
-  const findClosestRole = (invalidRole: string): string => {
-    const roles = ['user', 'admin', 'super_admin'];
+  const findClosestRole = (invalidRole: string): RoleType => {
     const normalized = invalidRole.toLowerCase();
     
     if (normalized.includes('admin') && normalized.includes('super')) return 'super_admin';
@@ -228,18 +243,19 @@ export const MassRoleAssignment: React.FC<MassRoleAssignmentProps> = ({
   });
 
   const applyBulkAssignment = () => {
-    const selectedUsers = users.filter(user => 
-      assignments.some(a => a.email === user.email)
+    const list = (users as Array<{ email?: string; role?: string }>);
+    const selectedUsers = list.filter(user => 
+      assignments.some(a => a.email === (user.email ?? ''))
     );
 
     const bulkAssignments = selectedUsers.map(user => ({
-      email: user.email,
-      currentRole: user.role,
+      email: user.email ?? '',
+      currentRole: (user.role || 'user'),
       newRole: bulkRole,
       subscriptionPlan: bulkPlan,
       permissions: permissionsByRole[bulkRole],
       status: 'pending' as const,
-      aiSuggestion: `Bulk assignment: ${user.role} → ${bulkRole}`,
+      aiSuggestion: `Bulk assignment: ${(user.role || 'user')} → ${bulkRole}`,
       confidenceScore: 0.9
     }));
 
@@ -297,7 +313,7 @@ export const MassRoleAssignment: React.FC<MassRoleAssignmentProps> = ({
     window.URL.revokeObjectURL(url);
   };
 
-  const getStatusIcon = (status: string, confidence?: number) => {
+  const getStatusIcon = (status: RoleAssignmentData['status'], confidence?: number): JSX.Element => {
     switch (status) {
       case 'success':
         return <CheckCircle className="text-green-600" size={16} />;
@@ -312,7 +328,7 @@ export const MassRoleAssignment: React.FC<MassRoleAssignmentProps> = ({
     }
   };
 
-  const getRoleIcon = (role: string) => {
+  const getRoleIcon = (role: string): JSX.Element => {
     switch (role) {
       case 'super_admin':
         return <Crown className="text-purple-600" size={16} />;
@@ -400,7 +416,7 @@ export const MassRoleAssignment: React.FC<MassRoleAssignmentProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <select
             value={bulkRole}
-            onChange={(e) => setBulkRole(e.target.value as unknown)}
+            onChange={(e) => setBulkRole(e.target.value as RoleType)}
             className="border border-gray-300 rounded-lg px-3 py-2"
           >
             <option value="user">User Role</option>
@@ -410,7 +426,7 @@ export const MassRoleAssignment: React.FC<MassRoleAssignmentProps> = ({
           
           <select
             value={bulkPlan}
-            onChange={(e) => setBulkPlan(e.target.value as unknown)}
+            onChange={(e) => setBulkPlan(e.target.value as PlanType)}
             className="border border-gray-300 rounded-lg px-3 py-2"
           >
             <option value="free">Free Plan</option>
