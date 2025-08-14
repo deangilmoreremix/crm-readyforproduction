@@ -1,0 +1,20 @@
+type ApiKeys = {
+  openai: string;
+  gemini: string;
+  elevenlabs: string;
+};
+
+const readEnv = (name: string): string =>
+  (typeof import.meta !== "undefined" && (import.meta as any)?.env?.[name]) ||
+  process.env?.[name] ||
+  "";
+
+const initialApiKeys: ApiKeys = {
+  openai: readEnv("VITE_OPENAI_API_KEY") || readEnv("OPENAI_API_KEY") || "",
+  gemini: readEnv("VITE_GEMINI_API_KEY") || readEnv("GEMINI_API_KEY") || "",
+  elevenlabs:
+    readEnv("VITE_ELEVENLABS_API_KEY") || readEnv("ELEVENLABS_API_KEY") || "",
+};
+
+// Use your existing zustand/persist setup, but do NOT hardcode any secrets.
+// Ensure defaults come from initialApiKeys or empty strings.
