@@ -350,7 +350,7 @@ export default function ProposalGenerator() {
             <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg flex items-center">
               <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
               <span className="text-red-700">{error}</span>
-            </div>
+            </motion.div>
           )}
 
           {success && (
@@ -399,8 +399,8 @@ export default function ProposalGenerator() {
               <p>Your generated proposal will appear here</p>
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }
