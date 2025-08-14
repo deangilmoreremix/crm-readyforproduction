@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Routes, Route, Navigate, BrowserRouter as Router } from 'react-router-dom';
 import ExactNavbar from './components/layout/ExactNavbar';
 import Dashboard from './components/Dashboard';
 import LandingPage from './pages/Landing/LandingPage';
-import SimpleLandingPage from './pages/Landing/SimpleLandingPage';
+// import SimpleLandingPage from './pages/Landing/SimpleLandingPage';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import ForgotPassword from './pages/Auth/ForgotPassword';
@@ -28,7 +28,7 @@ import { TenantProvider } from './components/TenantProvider';
 import { RoleProvider } from './components/RoleBasedAccess';
 
 // Import existing pages
-import Contacts from './pages/Contacts';
+// import Contacts from './pages/Contacts';
 import NetlifyContacts from './pages/NetlifyContacts';
 
 import { EnhancedPipeline } from './components/EnhancedPipeline';

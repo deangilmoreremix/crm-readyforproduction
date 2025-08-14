@@ -181,12 +181,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onContactsClick }) => {
 
   // Calculate metrics from deal data
   const calculateMetrics = () => {
-    const now = new Date();
-    const totalActiveDeals = 0;;
-    const totalClosingThisMonth = 0;;
-    const totalAtRisk = 0;;
-    const totalValue = 0;;
-    const wonValue = 0;;
+  const now = new Date();
+  let totalActiveDeals = 0;
+  let totalClosingThisMonth = 0;
+  let totalAtRisk = 0;
+  let totalValue = 0;
+  let wonValue = 0;
     
     Object.values(deals).forEach(deal => {
       // Count active deals (not closed)
@@ -195,7 +195,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onContactsClick }) => {
         totalValue += deal.value;
         
         // Deals closing this month
-        if (deal.dueDate && deal.dueDate.getMonth() === now.getMonth()) {
+  if (deal.dueDate && new Date(deal.dueDate).getMonth() === now.getMonth()) {
           totalClosingThisMonth++;
         }
         
@@ -274,10 +274,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onContactsClick }) => {
     
     // Sort by due date (ascending)
     return activeDeals
-      .filter(deal => deal.dueDate)
+      .filter(deal => !!deal.dueDate)
       .sort((a, b) => {
-        if (!a.dueDate || !b.dueDate) return 0;
-        return a.dueDate.getTime() - b.dueDate.getTime();
+        const aDate = a.dueDate ? new Date(a.dueDate) : null;
+        const bDate = b.dueDate ? new Date(b.dueDate) : null;
+        if (!aDate || !bDate) return 0;
+        return aDate.getTime() - bDate.getTime();
       })
       .slice(0, 5); // Get top 5
   };

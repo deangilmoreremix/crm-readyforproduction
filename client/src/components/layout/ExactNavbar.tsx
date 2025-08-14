@@ -1,6 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, Calendar, ChevronDown, ExternalLink, Home, Image, Key, LogOut, Menu, Moon, Phone, Plus, Search, Settings, Shield, Sparkles, Sun, User, UserPlus, Video, X } from 'lucide-react';
+import { 
+  Bell,
+  Calendar,
+  ChevronDown,
+  ExternalLink,
+  Home,
+  Image,
+  Key,
+  LogOut,
+  Menu,
+  Moon,
+  Phone,
+  Plus,
+  Search,
+  Settings,
+  Shield,
+  Sparkles,
+  Sun,
+  User,
+  UserPlus,
+  Video,
+  X,
+  // Additional icons used below
+  CheckSquare,
+  Bot,
+  Layers,
+  Clock,
+  Repeat,
+  AlertTriangle,
+  Users,
+  Briefcase,
+  Target,
+  Brain,
+  Megaphone,
+  DollarSign,
+  Receipt,
+  TrendingUp,
+  FileText,
+  PieChart,
+  Globe,
+  MessageSquare,
+  BookOpen,
+  Mic,
+  BarChart3,
+  Camera,
+  Grid3X3,
+  Eye,
+  Code,
+  MessageCircle,
+  Activity,
+  Zap,
+  LineChart,
+  Mail,
+  Volume2,
+  Edit3,
+  Palette
+} from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useNavigation } from '../../contexts/NavigationContext';
 import { useDealStore } from '../../store/dealStore';
@@ -77,15 +133,7 @@ const Navbar: React.FC<NavbarProps> = ({ onOpenPipelineModal }) => {
     setActiveTab(currentTab);
   }, [location.pathname]);
 
-  // Tasks dropdown tools (defined early to use in navigation)
-  const taskTools = [
-    { name: 'Task Management', tool: 'task-management', icon: CheckSquare },
-    { name: 'Task Automation', tool: 'task-automation', icon: Bot },
-    { name: 'Project Tracker', tool: 'project-tracker', icon: Layers },
-    { name: 'Time Tracking', tool: 'time-tracking', icon: Clock },
-    { name: 'Workflow Builder', tool: 'workflow-builder', icon: Repeat },
-    { name: 'Deadline Manager', tool: 'deadline-manager', icon: AlertTriangle }
-  ];
+  // (taskTools declared later; removed early duplicate)
 
   const toggleDropdown = (dropdown: string) => {
     setActiveDropdown(activeDropdown === dropdown ? null : dropdown);

@@ -65,7 +65,7 @@ const parseCSV = (text: string): string[][] => {
     let current = '';
     let inQuotes = false;
     
-    for (const i = 0; i < line.length; i++) {
+    for (let i = 0; i < line.length; i++) {
       const char = line[i];
       
       if (char === '"' && (i === 0 || line[i-1] === ',')) {

@@ -20,8 +20,9 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"],
+  "include": ["client/src"],
   "exclude": [
-    "src/components/dashboard/**"
+  "client/src/components/dashboard/**",
+  "client/src/pages/auth/**"
   ]
 }

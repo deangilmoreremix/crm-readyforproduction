@@ -84,8 +84,8 @@ const DocumentAnalyzerRealtime: React.FC<DocumentAnalyzerRealtimeProps> = ({
     setError(null);
     
     // Simulate progressive analysis with steps
-    const totalSteps = analysisSteps[analysisType].length;
-    for (const i = 0; i < totalSteps; i++) {
+  const totalSteps = analysisSteps[analysisType].length;
+  for (let i = 0; i < totalSteps; i++) {
       setCurrentAnalysisStep(analysisSteps[analysisType][i]);
       setAnalysisProgress(Math.round((i / (totalSteps - 1)) * 100));
       // Add a delay between steps to simulate processing
@@ -142,7 +142,7 @@ const DocumentAnalyzerRealtime: React.FC<DocumentAnalyzerRealtimeProps> = ({
   const copyToClipboard = () => {
     if (!analysisResult) return;
     
-    const textToCopy = `Analysis Summary:\n${analysisResult.summary}\n\nKey Points:\n`;;
+  let textToCopy = `Analysis Summary:\n${analysisResult.summary}\n\nKey Points:\n`;
     analysisResult.keyPoints.forEach((point, index) => {
       textToCopy += `${index + 1}. ${point}\n`;
     });

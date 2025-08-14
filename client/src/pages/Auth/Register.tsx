@@ -1,5 +1,15 @@
 import React, { useEffect } from 'react';
-import { SignUp } from '@clerk/clerk-react';
+let SignUpComponent: React.ComponentType<any> | null = null;
+const hasClerk = Boolean(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
+if (hasClerk) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    // @ts-ignore - dynamic require to avoid bundling when not configured
+    SignUpComponent = require('@clerk/clerk-react').SignUp as React.ComponentType;
+  } catch (e) {
+    SignUpComponent = null;
+  }
+}
 import { useNavigate } from 'react-router-dom';
 
 const Register: React.FC = () => {
@@ -16,7 +26,7 @@ const Register: React.FC = () => {
   }, [publishableKey, navigate]);
 
   // If no Clerk key, show development notice
-  if (!publishableKey) {
+  if (!publishableKey || !SignUpComponent) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
@@ -43,7 +53,8 @@ const Register: React.FC = () => {
         </div>
         
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 shadow-2xl">
-          <SignUp 
+          {SignUpComponent && (
+          <SignUpComponent 
             appearance={{
               elements: {
                 rootBox: "w-full",
@@ -70,6 +81,7 @@ const Register: React.FC = () => {
             signInUrl="/login"
             afterSignUpUrl="/dashboard"
           />
+          )}
         </div>
       </div>
     </div>

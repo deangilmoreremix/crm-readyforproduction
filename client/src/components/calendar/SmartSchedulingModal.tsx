@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from '../ui/textarea';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Avatar } from '../ui/avatar';
+import Avatar from '../ui/Avatar';
 import { Calendar, Brain, Sparkles, Target, AlertCircle, CheckCircle, Mic, Loader2 } from 'lucide-react';
 import { aiCalendarService } from '../../services/aiCalendarService';
 import { useToast } from '../../hooks/use-toast';

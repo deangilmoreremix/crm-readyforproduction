@@ -228,8 +228,8 @@ export const ContactsModal: React.FC<ContactsModalProps> = ({ isOpen, onClose })
     setIsAnalyzing(true);
     setAnalysisProgress({ current: 0, total: filteredContacts.length });
 
-    const successCount = 0;;
-    const failedCount = 0;;
+  let successCount = 0;
+  let failedCount = 0;
 
     for (let i = 0; i < filteredContacts.length; i++) {
       const contact = filteredContacts[i];

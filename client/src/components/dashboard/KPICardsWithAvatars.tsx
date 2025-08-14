@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Target, DollarSign, Award, BarChart3 } from 'lucide-react';
 import { useDealStore } from '../../store/dealStore';
 import { useContactStore } from '../../store/contactStore';
 import Avatar from '../ui/Avatar';
@@ -27,9 +27,9 @@ const KPICardsWithAvatars: React.FC = () => {
       deal.stage !== 'closed-won' && deal.stage !== 'closed-lost'
     );
     
-    return activeDeals.map(deal => ({
+    return activeDeals.map((deal: any) => ({
       ...deal,
-      contact: contacts[deal.contactId]
+      contact: (contacts as any)[deal.contactId as unknown as string]
     })).filter(deal => deal.contact); // Only include deals with valid contacts
   };
 
@@ -39,9 +39,9 @@ const KPICardsWithAvatars: React.FC = () => {
       deal.stage === 'closed-won'
     );
     
-    return wonDeals.map(deal => ({
+    return wonDeals.map((deal: any) => ({
       ...deal,
-      contact: contacts[deal.contactId]
+      contact: (contacts as any)[deal.contactId as unknown as string]
     })).filter(deal => deal.contact); // Only include deals with valid contacts
   };
 
@@ -50,10 +50,10 @@ const KPICardsWithAvatars: React.FC = () => {
 
   // Calculate metrics
   const calculateMetrics = () => {
-    const dealsArray = Object.values(deals);
-    const totalActiveDeals = 0;;
-    const totalValue = 0;;
-    const wonValue = 0;;
+  const dealsArray = Object.values(deals);
+  let totalActiveDeals = 0;
+  let totalValue = 0;
+  let wonValue = 0;
     
     dealsArray.forEach(deal => {
       if (deal.stage !== 'closed-won' && deal.stage !== 'closed-lost') {
@@ -87,7 +87,7 @@ const KPICardsWithAvatars: React.FC = () => {
   };
 
   // Render avatar stack component
-  const renderAvatarStack = (deals: unknown[], maxAvatars: number = 3) => {
+  const renderAvatarStack = (deals: Array<{ id: string; contact: { name: string; avatar?: string; avatarSrc?: string } }>, maxAvatars: number = 3) => {
     const displayDeals = deals.slice(0, maxAvatars);
     const extraCount = Math.max(0, deals.length - maxAvatars);
 

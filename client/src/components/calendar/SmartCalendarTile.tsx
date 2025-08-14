@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Avatar } from '../ui/avatar';
+import Avatar from '../ui/Avatar';
 import { Badge } from '../ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { AlertTriangle, Brain, Calendar, Phone, Star, Target, TrendingUp, Users } from 'lucide-react';
@@ -82,15 +82,15 @@ export const SmartCalendarTile: React.FC<SmartCalendarTileProps> = ({
         recommendations: generateRecommendations(appointments, hasConflicts, urgencyLevel)
       });
 
-      // Generate avatars for contacts without photos
-      generateMissingAvatars();
+  // Generate avatars for contacts without photos
+  generateMissingAvatars();
     } catch (error) {
       console.error('Error analyzing day:', error);
     }
   };
 
   const checkForConflicts = (appointments: Appointment[]): boolean => {
-    for (const i = 0; i < appointments.length; i++) {
+    for (let i = 0; i < appointments.length; i++) {
       for (let j = i + 1; j < appointments.length; j++) {
         const apt1Start = new Date(appointments[i].startTime);
         const apt1End = new Date(appointments[i].endTime);
@@ -130,7 +130,9 @@ export const SmartCalendarTile: React.FC<SmartCalendarTileProps> = ({
       for (const attendee of appointment.attendees) {
         if (!attendee.avatar && !avatarUrls[attendee.id]) {
           try {
-            const avatarUrl = await aiCalendarService.generateContactAvatar(attendee.name, attendee.role);
+            // Some environments may not have this helper; call safely
+            const serviceAny = aiCalendarService as unknown as { generateContactAvatar?: (name: string, role?: string) => Promise<string> };
+            const avatarUrl = serviceAny.generateContactAvatar ? await serviceAny.generateContactAvatar(attendee.name, attendee.role) : '';
             if (avatarUrl) {
               newAvatarUrls[attendee.id] = avatarUrl;
             }
@@ -164,7 +166,6 @@ export const SmartCalendarTile: React.FC<SmartCalendarTileProps> = ({
     }
   };
 
-  const priorityAppointments = appointments.filter(apt => apt.priority === 'high');
   const allAttendees = appointments.flatMap(apt => apt.attendees);
   const uniqueAttendees = allAttendees.filter((attendee, index, self) => 
     self.findIndex(a => a.id === attendee.id) === index
@@ -247,7 +248,7 @@ export const SmartCalendarTile: React.FC<SmartCalendarTileProps> = ({
 
         {/* Appointment Previews */}
         <div className="space-y-2">
-          {appointments.slice(0, 3).map((appointment, index) => (
+              {appointments.slice(0, 3).map((appointment) => (
             <div key={appointment.id} className="flex items-center gap-2 p-2 bg-white dark:bg-gray-800 rounded-md shadow-sm">
               <div className={`w-2 h-2 rounded-full ${
                 appointment.priority === 'high' ? 'bg-red-500' :
@@ -287,16 +288,15 @@ export const SmartCalendarTile: React.FC<SmartCalendarTileProps> = ({
         {uniqueAttendees.length > 0 && (
           <div className="mt-3 flex items-center gap-1">
             <div className="flex -space-x-2">
-              {uniqueAttendees.slice(0, 4).map((attendee, index) => (
+              {uniqueAttendees.slice(0, 4).map((attendee) => (
                 <Tooltip key={attendee.id}>
                   <TooltipTrigger>
-                    <Avatar className="w-6 h-6 border-2 border-white dark:border-gray-800">
-                      <img 
-                        src={attendee.avatar || avatarUrls[attendee.id] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${attendee.name}`}
-                        alt={attendee.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </Avatar>
+                    <Avatar
+                      size="xs"
+                      className="border-2 border-white dark:border-gray-800"
+                      src={attendee.avatar || avatarUrls[attendee.id] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${attendee.name}`}
+                      alt={attendee.name}
+                    />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>{attendee.name}</p>

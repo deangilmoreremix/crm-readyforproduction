@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import Avatar from 'react-avatar';
 import { CSVLink } from 'react-csv';
 import { useDropzone } from 'react-dropzone';
-import Papa from 'papaparse';
+import { read, utils } from 'xlsx';
 import Fuse from 'fuse.js';
 import Select from 'react-select';
 import AIEnhancedContactCard from '../components/contacts/AIEnhancedContactCard';
@@ -209,57 +209,58 @@ const Contacts: React.FC = () => {
   // Import contacts feature
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+      'application/vnd.ms-excel': ['.xls'],
       'text/csv': ['.csv']
     },
     onDrop: (acceptedFiles) => {
       const file = acceptedFiles[0];
       if (file) {
-        // Only CSV is supported to avoid known Excel parser vulnerabilities
-        if (!file.name.toLowerCase().endsWith('.csv') && !file.type.includes('csv')) {
-          setImportValidation({ error: 'Please upload a CSV file (Excel not supported). Convert your sheet to CSV and retry.' });
-          return;
-        }
-
         const reader = new FileReader();
         reader.onload = (e) => {
           try {
-            const text = e.target?.result as string | undefined;
-            if (!text) {
+            const data = e.target?.result;
+            if (!data) {
               setImportValidation({ error: 'Failed to read file' });
               return;
             }
-
-            const parsed = Papa.parse<Record<string, unknown>>(text, { header: true, skipEmptyLines: true });
-            if (parsed.errors && parsed.errors.length > 0) {
-              setImportValidation({ error: `CSV parse error: ${parsed.errors[0].message}` });
-              return;
-            }
-
-            const rows = parsed.data as unknown[];
-            if (!rows || rows.length === 0) {
+            
+            const workbook = read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = utils.sheet_to_json(worksheet);
+            
+            // Validate data has required fields
+            if (jsonData.length === 0) {
               setImportValidation({ error: 'No data found in file' });
               return;
             }
-
-            // Validate required columns
+            
+            // Check for required fields
             const requiredFields = ['name', 'email'];
-            const firstRow = rows[0] as any;
-            const missingFields = requiredFields.filter(field =>
-              Object.keys(firstRow || {}).every(key => key.toLowerCase() !== field.toLowerCase())
+            const firstRow = jsonData[0] as any;
+            const missingFields = requiredFields.filter(field => 
+              !Object.keys(firstRow).some(key => 
+                key.toLowerCase() === field.toLowerCase()
+              )
             );
-
+            
             if (missingFields.length > 0) {
-              setImportValidation({ error: `Missing required fields: ${missingFields.join(', ')}` });
+              setImportValidation({ 
+                error: `Missing required fields: ${missingFields.join(', ')}` 
+              });
               return;
             }
-
-            setImportedData(rows);
-            setImportValidation({ success: `Found ${rows.length} contacts ready to import` });
+            
+            setImportedData(jsonData);
+            setImportValidation({ 
+              success: `Found ${jsonData.length} contacts ready to import` 
+            });
           } catch (error) {
-            setImportValidation({ error: 'Failed to parse CSV' });
+            setImportValidation({ error: 'Failed to parse file' });
           }
         };
-        reader.readAsText(file);
+        reader.readAsArrayBuffer(file);
       }
     }
   });

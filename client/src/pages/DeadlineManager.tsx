@@ -188,7 +188,7 @@ export const DeadlineManager: React.FC = () => {
     const dueDate = new Date(item.dueDate);
     const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     
-    const urgencyScore = 0;;
+  let urgencyScore = 0;
     if (daysUntilDue < 0) urgencyScore += 100; // Overdue
     else if (daysUntilDue === 0) urgencyScore += 80; // Due today
     else if (daysUntilDue <= 3) urgencyScore += 60; // Due within 3 days

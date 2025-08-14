@@ -58,7 +58,7 @@ export const MassRoleAssignment: React.FC<MassRoleAssignmentProps> = ({
     const assignments: RoleAssignmentData[] = [];
     const errors: ValidationError[] = [];
 
-    for (const i = 1; i < lines.length; i++) {
+  for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',').map(v => v.trim());
       const rowData: unknown = {};
       

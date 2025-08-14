@@ -24,7 +24,7 @@ export const getAvatarColor = (name: string): string => {
   ];
   
   let hash = 0;
-  for (const i = 0; i < name.length; i++) {
+  for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
   

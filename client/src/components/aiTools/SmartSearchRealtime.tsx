@@ -2,14 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useContactStore } from '../../store/contactStore';
 import { useDealStore } from '../../store/dealStore';
-import { Search, DollarSign } from 'lucide-react';
+import { Search, DollarSign, User, Building } from 'lucide-react';
 
 const SmartSearchRealtime: React.FC = () => {
   const { isDark } = useTheme();
   const { contacts } = useContactStore();
   const { deals } = useDealStore();
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  type SearchResult = {
+    type: 'contact' | 'deal';
+    id: string;
+    title: string;
+    subtitle: string;
+    icon: any;
+    relevance: number;
+    stage?: string;
+    value?: number;
+    email?: string;
+  };
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
@@ -29,7 +40,7 @@ const SmartSearchRealtime: React.FC = () => {
 
   const performSearch = (query: string) => {
     const lowercaseQuery = query.toLowerCase();
-    const results: unknown[] = [];
+  const results: SearchResult[] = [];
 
     // Search contacts
     Object.values(contacts).forEach(contact => {
@@ -85,7 +96,7 @@ const SmartSearchRealtime: React.FC = () => {
     if (textLower.includes(queryLower)) return 60;
     
     // Fuzzy matching for partial matches
-    const score = 0;;
+  let score = 0;
     const queryWords = queryLower.split(' ');
     queryWords.forEach(word => {
       if (textLower.includes(word)) score += 20;
@@ -199,7 +210,7 @@ const SmartSearchRealtime: React.FC = () => {
                     </div>
                   </div>
                   
-                  {result.type === 'deal' && (
+                  {result.type === 'deal' && typeof result.value === 'number' && result.stage && (
                     <div className="mt-2 flex items-center space-x-4 text-xs">
                       <div className="flex items-center space-x-1">
                         <DollarSign className="w-3 h-3" />
