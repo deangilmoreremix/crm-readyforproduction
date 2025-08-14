@@ -58,3 +58,7 @@ attached_assets/
 temp_zip_contents/
 *.zip
 node_modules/
+
+# secrets
+.env
+.env.*
