@@ -81,6 +81,7 @@ const LiveDealAnalysis: React.FC<LiveDealAnalysisProps> = ({
     runProgressSimulation();
     
     try {
+<<<<<<< HEAD
       // In a real implementation, we would call the Gemini API with the deal data
       // For the demo, let's simulate a response after the progress animation
       await new Promise(resolve => setTimeout(resolve, 7000));
@@ -92,6 +93,139 @@ const LiveDealAnalysis: React.FC<LiveDealAnalysisProps> = ({
         case 'proposal': baseProb = 40; break;
         case 'negotiation': baseProb = 65; break;
         default: baseProb = 25;
+=======
+      // Check if Google AI API key is configured
+      const apiKey = import.meta.env.VITE_GOOGLE_AI_API_KEY;
+      if (!apiKey || apiKey === 'your_google_ai_api_key') {
+        console.log('Google AI API key not configured, using basic analysis only');
+        setError('Google AI API key not configured. Using basic analysis mode.');
+      }
+      
+      // Process basic insights without requiring AI
+      const activeDeals = Object.values(deals).filter(deal => 
+        deal.stage !== 'closed-won' && deal.stage !== 'closed-lost'
+      );
+      
+      setActiveDealCount(activeDeals.length);
+      
+      const avgValue = activeDeals.length > 0 
+        ? activeDeals.reduce((sum, deal) => sum + deal.value, 0) / activeDeals.length 
+        : 0;
+      
+      setAverageDealValue(avgValue);
+      
+      // Get basic insights without AI first
+      const highValueDeals = activeDeals.filter(deal => deal.value > 50000);
+      const stalledDeals = activeDeals.filter(deal => deal.daysInStage && deal.daysInStage > 10);
+      const hotDeals = activeDeals.filter(deal => deal.probability > 70);
+      
+      // Get related contacts for each deal type
+      const highValueContacts = highValueDeals.map(deal => {
+        const contact = contacts[deal.contactId];
+        return contact ? {
+          id: contact.id,
+          name: contact.name,
+          avatar: contact.avatar,
+          avatarSrc: contact.avatarSrc
+        } : null;
+      }).filter(Boolean) as Array<{ id: string; name: string; avatar?: string; avatarSrc?: string }>;
+      
+      const stalledContacts = stalledDeals.map(deal => {
+        const contact = contacts[deal.contactId];
+        return contact ? {
+          id: contact.id,
+          name: contact.name,
+          avatar: contact.avatar,
+          avatarSrc: contact.avatarSrc
+        } : null;
+      }).filter(Boolean) as Array<{ id: string; name: string; avatar?: string; avatarSrc?: string }>;
+      
+      const hotContacts = hotDeals.map(deal => {
+        const contact = contacts[deal.contactId];
+        return contact ? {
+          id: contact.id,
+          name: contact.name,
+          avatar: contact.avatar,
+          avatarSrc: contact.avatarSrc
+        } : null;
+      }).filter(Boolean) as Array<{ id: string; name: string; avatar?: string; avatarSrc?: string }>;
+      
+      // Set initial insights
+      const initialInsights: DealInsight[] = [
+        {
+          type: 'success',
+          icon: TrendingUp,
+          title: 'High-Value Opportunities',
+          value: highValueDeals.length,
+          description: 'Deals over $50K',
+          color: 'text-green-600',
+          bgColor: isDark ? 'bg-green-500/20' : 'bg-green-100',
+          relatedContacts: highValueContacts
+        },
+        {
+          type: 'warning',
+          icon: AlertTriangle,
+          title: 'Stalled Deals',
+          value: stalledDeals.length,
+          description: 'Over 10 days in stage',
+          color: 'text-orange-600',
+          bgColor: isDark ? 'bg-orange-500/20' : 'bg-orange-100',
+          relatedContacts: stalledContacts
+        },
+        {
+          type: 'insight',
+          icon: Clock,
+          title: 'Hot Prospects',
+          value: hotDeals.length,
+          description: 'High probability deals',
+          color: 'text-blue-600',
+          bgColor: isDark ? 'bg-blue-500/20' : 'bg-blue-100',
+          relatedContacts: hotContacts
+        }
+      ];
+      
+      setInsights(initialInsights);
+      
+      // Now enhance with AI insights if we have enough deals
+      if (activeDeals.length >= 3 && apiKey && apiKey !== 'your_google_ai_api_key') {
+        try {
+          // Prepare data for AI analysis
+          const dealData = {
+            deals: activeDeals.map(deal => ({
+              id: deal.id,
+              title: deal.title,
+              value: deal.value,
+              stage: deal.stage,
+              probability: deal.probability,
+              daysInStage: deal.daysInStage || 0,
+              priority: deal.priority,
+              contactId: deal.contactId
+            })),
+            summary: {
+              totalCount: activeDeals.length,
+              totalValue: activeDeals.reduce((sum, deal) => sum + deal.value, 0),
+              avgValue,
+              stageDistribution: {
+                qualification: activeDeals.filter(d => d.stage === 'qualification').length,
+                proposal: activeDeals.filter(d => d.stage === 'proposal').length,
+                negotiation: activeDeals.filter(d => d.stage === 'negotiation').length
+              }
+            }
+          };
+          
+          // Use AI for deal analysis
+          const analysisResult = await geminiService.generatePersonalizedMessage(dealData, 'email');
+          
+          if (analysisResult) {
+            // For now, keep the basic insights since the service doesn't have analyzeDeal method
+            console.log('Generated deal analysis insight:', analysisResult);
+          }
+        } catch (aiError) {
+          console.error("AI deal analysis error:", aiError);
+          // We keep the basic insights if AI fails
+          setError(aiError instanceof Error ? aiError.message : "Failed to analyze deals with AI");
+        }
+>>>>>>> origin/main
       }
       
       const winProbability = Math.min(95, Math.max(5, baseProb + (Math.random() * 20 - 10)));

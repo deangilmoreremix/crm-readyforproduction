@@ -56,6 +56,8 @@ extracted/
 backup_pre_friday-1/
 attached_assets/
 temp_zip_contents/
+temp_zip_audit_*/
+zip_audit_reports_*/
 *.zip
 node_modules/
 

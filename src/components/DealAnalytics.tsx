@@ -8,6 +8,7 @@ interface DealAnalyticsProps {
   className?: string;
 }
 
+<<<<<<< HEAD
 const DealAnalytics: React.FC<DealAnalyticsProps> = ({ 
   title = 'Deal Analytics', 
   className = '' 
@@ -24,6 +25,53 @@ const DealAnalytics: React.FC<DealAnalyticsProps> = ({
     negotiation: 0,
     'closed-won': 0,
     'closed-lost': 0
+=======
+interface PipelineStage {
+  name: string;
+  value: number;
+  deals: number;
+  color: string;
+}
+
+const DealAnalytics: React.FC = () => {
+  const { deals, getStageValues } = useDealStore();
+  const { contacts } = useContactStore();
+  const { isDark } = useTheme();
+  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'quarter'>('month');
+
+  // Get stage values by calling the function
+  const stageValues = getStageValues();
+
+  // Render avatar stack
+  const renderAvatarStack = (contacts: Array<{ id: string; name: string; avatar?: string }>, maxVisible: number = 3) => {
+    const visibleContacts = contacts.slice(0, maxVisible);
+    const remainingCount = Math.max(0, contacts.length - maxVisible);
+    
+    return (
+      <div className="flex items-center mt-2">
+        <div className="flex -space-x-2">
+          {visibleContacts.map((contact, index) => (
+            <div key={contact.id} className="relative" style={{ zIndex: maxVisible - index }}>
+              <Avatar
+                src={contact.avatar}
+                alt={contact.name}
+                size="sm"
+                fallback={getInitials(contact.name)}
+                className="border-2 border-white dark:border-gray-900"
+              />
+            </div>
+          ))}
+          {remainingCount > 0 && (
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold border-2 border-white dark:border-gray-900 ${
+              isDark ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-700'
+            }`}>
+              +{remainingCount}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+>>>>>>> origin/main
   };
   
   // Calculate monthly pipeline value

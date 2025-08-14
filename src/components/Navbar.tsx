@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { Activity, BarChart3, Bell, Brain, Briefcase, Calendar, Camera, ChevronDown, Clock, DollarSign, ExternalLink, Eye, FileText, Globe, Image, LineChart, Mail, Menu, MessageSquare, Mic, Moon, Phone, PieChart, Search, Shield, Sparkles, Sun, Target, TrendingUp, User, Users, Video, Volume2, X, Zap } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ChevronDown, User, Bell, Search, BarChart3, Users, Target, MessageSquare, Video, FileText, Zap, TrendingUp, Calendar, Phone, Receipt, BookOpen, Mic, Sun, Moon, Brain, Mail, Grid3X3, Briefcase, Megaphone, Activity, CheckSquare, Sparkles, PieChart, Clock, Shield, Globe, Camera, Layers, Repeat, Palette, DollarSign, Volume2, Image, Bot, Eye, Code, MessageCircle, AlertTriangle, LineChart, Edit3, ExternalLink, Menu, X } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigation } from '../contexts/NavigationContext';
-import { useCallback } from 'react';
 import { useDealStore } from '../store/dealStore';
 import { useContactStore } from '../store/contactStore';
 import { useTaskStore } from '../store/taskStore';
@@ -19,7 +18,7 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ onOpenPipelineModal }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
-  const { _navigateToFeature, openAITool } = useNavigation();
+  const { openAITool } = useNavigation();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -85,12 +84,18 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ onOpenPipelineModal }) => {
     { name: 'Territory Management', tool: 'territory-management', icon: Globe }
   ];
 
-  // Communication dropdown tools
+  // Communication dropdown tools - Enhanced with SDRButtons features
   const communicationTools = [
     { name: 'Video Email', tool: 'video-email', icon: Video },
     { name: 'Text Messages', tool: 'text-messages', icon: MessageSquare },
     { name: 'Email Composer', tool: 'email-composer', icon: Mail },
-    { name: 'Campaigns', tool: 'campaigns', icon: Megaphone }
+    { name: 'Campaigns', tool: 'campaigns', icon: Megaphone },
+    // Enhanced SDRButtons Communication Features
+    { name: 'Group Calls', tool: 'group-calls', icon: Users },
+    { name: 'Call Recording', tool: 'call-recording', icon: Mic },
+    { name: 'In-Call Messaging', tool: 'in-call-messaging', icon: MessageCircle },
+    { name: 'Call Analytics', tool: 'call-analytics', icon: BarChart3 },
+    { name: 'Connection Quality Monitor', tool: 'connection-quality', icon: Activity }
   ];
 
   // Content dropdown tools
@@ -108,6 +113,7 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ onOpenPipelineModal }) => {
     { name: 'FunnelCraft AI', url: 'https://funnelcraft-ai.videoremix.io/', icon: Megaphone, isExternal: true },
     { name: 'SmartCRM Closer', url: 'https://smartcrm-closer.videoremix.io', icon: Users, isExternal: true },
     { name: 'ContentAI', url: 'https://content-ai.videoremix.io', icon: FileText, isExternal: true },
+    { name: 'Mobile View', url: '/mobile', icon: Camera, isExternal: false },
     { name: 'White-Label Customization', url: '/white-label', icon: Palette, isExternal: false }
   ];
 
@@ -172,6 +178,12 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ onOpenPipelineModal }) => {
     else if (toolName === 'campaigns') navigate('/campaigns');
     else if (toolName === 'image-generator') navigate('/image-generator');
     else if (toolName === 'ai-model-demo') navigate('/ai-model-demo');
+    // Enhanced SDRButtons Communication Features
+    else if (toolName === 'group-calls') navigate('/group-calls');
+    else if (toolName === 'call-recording') navigate('/call-recording');
+    else if (toolName === 'in-call-messaging') navigate('/in-call-messaging');
+    else if (toolName === 'call-analytics') navigate('/call-analytics');
+    else if (toolName === 'connection-quality') navigate('/connection-quality');
     else {
       // For other AI tools, open in AI tools page
       openAITool(toolName);
@@ -261,9 +273,22 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ onOpenPipelineModal }) => {
       id: 'pipeline',
       label: 'Pipeline',
       icon: Briefcase,
-      action: () => handleNavigation('/pipeline', 'pipeline'),
+      action: () => {
+        onOpenPipelineModal?.();
+        setActiveTab('pipeline');
+        setActiveDropdown(null);
+        setIsMobileMenuOpen(false);
+      },
       badge: counters.activeDeals,
       color: 'from-green-500 to-emerald-500'
+    },
+    {
+      id: 'analytics',
+      label: 'Analytics',
+      icon: BarChart3,
+      action: () => handleNavigation('/analytics', 'analytics'),
+      badge: null,
+      color: 'from-blue-500 to-cyan-500'
     },
     {
       id: 'ai-goals',
@@ -355,411 +380,189 @@ const Navbar: React.FC<NavbarProps> = React.memo(({ onOpenPipelineModal }) => {
   }, []);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 p-4">
-      {/* Main Navigation Container */}
-      <div className="max-w-7xl mx-auto will-change-transform">
-        <div className={`${isDark ? 'bg-gray-900/95 border-white/20' : 'bg-white/95 border-gray-200'} backdrop-blur-xl border rounded-full shadow-2xl transition-all duration-500 hover:shadow-3xl ring-1 ${isDark ? 'ring-white/10' : 'ring-gray-100'}`}>
-          <div className="flex items-center justify-between px-4 py-2">
-            
-            {/* Logo */}
-            <div className="flex items-center space-x-3">
-              <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                </div>
+    <nav className={`fixed top-0 left-0 right-0 z-50 ${
+      isDark 
+        ? 'bg-gray-900/95 border-gray-800' 
+        :   'bg-white/95 border-gray-200'
+    } backdrop-blur-xl border-b`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <div className="flex items-center">
+            <Link to="/dashboar d" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">SC</span>
               </div>
-              <div className="hidden md:block">
-                <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Smart<span className="text-green-400">CRM</span>
-                </h1>
-              </div>
-            </div>
+              <span className={`font-bold text-xl ${isDark ?  'text-white' : 'text-gray-900'}`}>
+                SmartCRM
+              </span>
+            </Link>
+          </div>
 
-            {/* Desktop Navigation Pills */}
-            <div className="hidden lg:flex items-center space-x-1">
-              {mainTabs.map((tab) => {
-                const isActive = activeTab === tab.id;
+          {/* Desktop Navigation */}
+          <div className="hidden md:block">
+            <div className="ml-10 flex items-baseline space-x-4">
+              {navigationItems.map((item) => {
+                const Icon = item.icon;
                 
                 return (
-                  <div key={tab.id} className="relative">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        tab.action();
-                      }}
-                      className={`
-                        relative flex items-center space-x-1 px-2 py-1.5 rounded-full 
-                        transition-all duration-300 transform hover:scale-105
-                        ${isActive 
-                          ? `bg-gradient-to-r ${tab.color} text-white shadow-lg ring-2 ring-white/20` 
-                          : `${isDark 
-                              ? 'text-white hover:bg-white/20 hover:text-white' 
-                              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                            }`
-                        }
-                        group
-                      `}
-                      title={tab.label}
-                    >
-                      <tab.icon 
-                        size={14} 
-                        className={`transition-transform duration-300 ${
-                          isActive ? 'scale-110' : 'group-hover:scale-110'
-                        }`} 
-                      />
-                      <span className="text-xs font-medium">{tab.label}</span>
-                      
-                      {/* Dynamic Badge */}
-                      {tab.badge && renderBadge(
-                        tab.badge, 
-                        tab.id === 'pipeline' ? 'bg-green-500' :
-                        tab.id === 'contacts' ? 'bg-purple-500' :
-                        tab.id === 'ai-goals' ? 'bg-orange-500' :
-                        tab.id === 'ai-tools' ? 'bg-pink-500' :
-                        tab.id === 'appointments' ? 'bg-cyan-500' :
-                        'bg-blue-500'
-                      )}
-
-                      {/* Active Tab Glow Effect */}
-                      {isActive && (
-                        <div className={`absolute inset-0 bg-gradient-to-r ${tab.color} rounded-full opacity-20 animate-pulse`}></div>
-                      )}
-                    </button>
-                  </div>
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 ${
+                      isActive(item.href)
+                        ? isDark
+                          ? 'bg-gray-800 text-white'
+                          :  'bg-gray-100 text-gray-900'
+                        : isDark
+                          ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`}
+                  >
+                    <Icon size={16} />
+                    <span>{item.name}</span>
+                  </Link>
                 );
               })}
-
-              {/* Dropdown Menu Items */}
-              {dropdownMenus.map((menu) => (
-                <div key={menu.id} className="relative">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleDropdown(menu.id, e);
-                    }}
-                    data-dropdown-toggle="true"
-                    className={`
-                      relative flex items-center space-x-1 px-2 py-1.5 rounded-full 
-                      transition-all duration-300 transform hover:scale-105
-                      ${activeDropdown === menu.id 
-                        ? `bg-gradient-to-r ${menu.color} text-white shadow-lg ring-2 ring-white/20` 
-                        : `${isDark 
-                            ? 'text-white hover:bg-white/20 hover:text-white' 
-                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                          }`
-                      }
-                      group
-                    `}
-                  >
-                    <menu.icon size={14} className="transition-transform duration-300 group-hover:scale-110" />
-                    <span className="text-xs font-medium">{menu.label}</span>
-                    <ChevronDown 
-                      size={12} 
-                      className={`transition-transform duration-300 ${
-                        activeDropdown === menu.id ? 'rotate-180' : ''
-                      }`} 
-                    />
-                    
-                    {/* Badge */}
-                    {renderBadge(menu.badge, menu.badgeColor)}
-
-                    {/* Active Dropdown Glow Effect */}
-                    {activeDropdown === menu.id && (
-                      <div className={`absolute inset-0 bg-gradient-to-r ${menu.color} rounded-full opacity-20 animate-pulse`}></div>
-                    )}
-                  </button>
-
-                  {/* Sales Dropdown */}
-                  {menu.id === 'sales' && activeDropdown === 'sales' && (
-                    <div className={`absolute top-14 right-0 w-64 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-2xl border ${isDark ? 'border-white/10' : 'border-gray-200'} rounded-2xl shadow-2xl z-50 overflow-hidden animate-fade-in`}>
-                      <div className="p-3">
-                        {salesTools.map((tool, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleAIToolClick(tool.tool)}
-                            className={`w-full text-left flex items-center space-x-3 p-3 rounded-xl transition-all duration-200 ${isDark ? 'hover:bg-white/5 text-gray-300 hover:text-white' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'}`}
-                          >
-                            <tool.icon size={16} className="text-green-500" />
-                            <span className="text-sm font-medium">{tool.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Tasks Dropdown */}
-                  {menu.id === 'tasks' && activeDropdown === 'tasks' && (
-                    <div className={`absolute top-14 right-0 w-64 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-2xl border ${isDark ? 'border-white/10' : 'border-gray-200'} rounded-2xl shadow-2xl z-50 overflow-hidden animate-fade-in`}>
-                      <div className="p-3">
-                        {taskTools.map((tool, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleAIToolClick(tool.tool)}
-                            className={`w-full text-left flex items-center space-x-3 p-3 rounded-xl transition-all duration-200 ${isDark ? 'hover:bg-white/5 text-gray-300 hover:text-white' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'}`}
-                          >
-                            <tool.icon size={16} className="text-orange-500" />
-                            <span className="text-sm font-medium">{tool.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Communication Dropdown */}
-                  {menu.id === 'communication' && activeDropdown === 'communication' && (
-                    <div className={`absolute top-14 right-0 w-64 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-2xl border ${isDark ? 'border-white/10' : 'border-gray-200'} rounded-2xl shadow-2xl z-50 overflow-hidden animate-fade-in`}>
-                      <div className="p-3">
-                        {communicationTools.map((tool, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleAIToolClick(tool.tool)}
-                            className={`w-full text-left flex items-center space-x-3 p-3 rounded-xl transition-all duration-200 ${isDark ? 'hover:bg-white/5 text-gray-300 hover:text-white' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'}`}
-                          >
-                            <tool.icon size={16} className="text-blue-500" />
-                            <span className="text-sm font-medium">{tool.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Content Dropdown */}
-                  {menu.id === 'content' && activeDropdown === 'content' && (
-                    <div className={`absolute top-14 right-0 w-64 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-2xl border ${isDark ? 'border-white/10' : 'border-gray-200'} rounded-2xl shadow-2xl z-50 overflow-hidden animate-fade-in`}>
-                      <div className="p-3">
-                        {contentTools.map((tool, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleAIToolClick(tool.tool)}
-                            className={`w-full text-left flex items-center space-x-3 p-3 rounded-xl transition-all duration-200 ${isDark ? 'hover:bg-white/5 text-gray-300 hover:text-white' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'}`}
-                          >
-                            <tool.icon size={16} className="text-amber-500" />
-                            <span className="text-sm font-medium">{tool.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* AI Categories Dropdown */}
-                  {menu.id === 'ai-categories' && activeDropdown === 'ai-categories' && (
-                    <div className={`absolute top-14 right-0 w-72 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-2xl border ${isDark ? 'border-white/10' : 'border-gray-200'} rounded-2xl shadow-2xl z-50 overflow-hidden animate-fade-in`}>
-                      <div className="p-3">
-                        <div className="mb-3">
-                          <h3 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-2`}>
-                            AI Tool Categories
-                          </h3>
-                        </div>
-                        
-                        {/* Core AI Tools */}
-                        <div className="mb-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                              Core AI Tools
-                            </span>
-                            <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                              {aiTools.filter(tool => tool.category === 'Core AI Tools').length}
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-1">
-                            {aiTools.filter(tool => tool.category === 'Core AI Tools').slice(0, 4).map((tool, index) => (
-                              <button
-                                key={index}
-                                onClick={() => handleAIToolClick(tool.tool)}
-                                className={`text-left flex items-center space-x-2 p-2 rounded-lg transition-all duration-200 ${isDark ? 'hover:bg-white/5 text-gray-300 hover:text-white' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'}`}
-                              >
-                                <tool.icon size={12} className="text-blue-500" />
-                                <span className="text-xs">{tool.name}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Communication Tools */}
-                        <div className="mb-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                              Communication
-                            </span>
-                            <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                              {aiTools.filter(tool => tool.category === 'Communication').length}
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-1">
-                            {aiTools.filter(tool => tool.category === 'Communication').map((tool, index) => (
-                              <button
-                                key={index}
-                                onClick={() => handleAIToolClick(tool.tool)}
-                                className={`text-left flex items-center space-x-2 p-2 rounded-lg transition-all duration-200 ${isDark ? 'hover:bg-white/5 text-gray-300 hover:text-white' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'}`}
-                              >
-                                <tool.icon size={12} className="text-green-500" />
-                                <span className="text-xs">{tool.name}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Real-time Features */}
-                        <div className="mb-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                              Real-time Features
-                            </span>
-                            <span className="bg-purple-500 text-white text-xs px-2 py-1 rounded-full">
-                              {aiTools.filter(tool => tool.category === 'Real-time Features').length}
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-1">
-                            {aiTools.filter(tool => tool.category === 'Real-time Features').slice(0, 4).map((tool, index) => (
-                              <button
-                                key={index}
-                                onClick={() => handleAIToolClick(tool.tool)}
-                                className={`text-left flex items-center space-x-2 p-2 rounded-lg transition-all duration-200 ${isDark ? 'hover:bg-white/5 text-gray-300 hover:text-white' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'}`}
-                              >
-                                <tool.icon size={12} className="text-purple-500" />
-                                <span className="text-xs">{tool.name}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* View All AI Tools Button */}
-                        <button
-                          onClick={() => handleNavigation('/ai-tools', 'ai-tools')}
-                          className={`w-full mt-3 py-2 px-4 rounded-lg border-2 border-dashed transition-all duration-200 ${isDark ? 'border-gray-600 hover:border-gray-500 text-gray-300 hover:text-white' : 'border-gray-300 hover:border-gray-400 text-gray-600 hover:text-gray-900'}`}
+              
+              {/* AI Tools Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsAIDropdownOpen(!isAIDropdownOpen)}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2  ${
+                    isDark
+                      ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <Brain size={16} />
+                  <span>AI Tools</span>
+                  <ChevronDown size={14} className={`transition-transform ${isAIDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {isAIDropdownOpen && (
+                  <div className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg ${
+                    isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                  } border ring-1 ring-black ring-opacity-5`}>
+                    <div className="py-1">
+                      {aiToolsItems.map((item) => (
+                        <Link
+                          key={item.name}
+                          to={item.href}
+                          className={`block px-4 py-2 text-sm transition-colors ${
+                            isDark
+                              ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                              : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                          }`}
+                          onClick={() => setIsAIDropdownOpen(false)}
                         >
-                          <span className="text-sm font-medium">View All {aiTools.length} AI Tools</span>
-                        </button>
-                      </div>
+                          {item.name}
+                        </Link>
+                      ))}
                     </div>
-                  )}
-
-                  {/* Connected Apps Dropdown */}
-                  {menu.id === 'apps' && activeDropdown === 'apps' && (
-                    <div className={`absolute top-14 right-0 w-72 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-2xl border ${isDark ? 'border-white/10' : 'border-gray-200'} rounded-2xl shadow-2xl z-50 overflow-hidden animate-fade-in`}>
-                      <div className="p-3">
-                        {connectedApps.map((app, index) => (
-                          app.isExternal ? (
-                            <a
-                              key={index}
-                              href={app.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={`w-full text-left flex items-center justify-between p-3 rounded-xl transition-all duration-200 ${isDark ? 'hover:bg-white/5 text-gray-300 hover:text-white' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'}`}
-                            >
-                              <div className="flex items-center space-x-3">
-                                <app.icon size={16} className="text-purple-500" />
-                                <span className="text-sm font-medium">{app.name}</span>
-                              </div>
-                              <ExternalLink size={12} className="opacity-50" />
-                            </a>
-                          ) : (
-                            <button
-                              key={index}
-                              onClick={() => handleNavigation(app.url, 'white-label')}
-                              className={`w-full text-left flex items-center space-x-3 p-3 rounded-xl transition-all duration-200 ${isDark ? 'hover:bg-white/5 text-gray-300 hover:text-white' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'}`}
-                            >
-                              <app.icon size={16} className="text-purple-500" />
-                              <span className="text-sm font-medium">{app.name}</span>
-                            </button>
-                          )
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+                  </div>
+                )}
+              </div>
             </div>
+          </div>
 
-            {/* Mobile Menu Button */}
-            <div className="lg:hidden">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsMobileMenuOpen(!isMobileMenuOpen);
-                }}
-                className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-white/10 text-white' : 'hover:bg-gray-100 text-gray-600'}`}
-              >
-                {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
-            </div>
+          {/* Right side - Theme toggle and mobile menu */}
+          <div className="flex items-center space-x-4">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-lg transition-colors ${
+                isDark
+                  ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
 
-            {/* Right Side Controls */}
-            <div className="hidden lg:flex items-center space-x-2">
-              {/* Search */}
-              <button className={`p-2 rounded-full transition-all duration-300 ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}>
-                <Search size={16} className={isDark ? 'text-white' : 'text-gray-600'} />
-              </button>
-              
-              {/* Notifications */}
-              <button className={`relative p-2 rounded-full transition-all duration-300 ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}>
-                <Bell size={16} className={isDark ? 'text-white' : 'text-gray-600'} />
-                {counters.totalNotifications > 0 && renderBadge(counters.totalNotifications)}
-              </button>
-
-              {/* Theme Toggle */}
-              <button
-                onClick={toggleTheme}
-                className={`p-2 rounded-full transition-all duration-300 ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
-              >
-                {isDark ? <Sun size={16} className="text-white" /> : <Moon size={16} className="text-gray-600" />}
-              </button>
-              
-              {/* User Profile */}
-              <button className={`p-2 rounded-full transition-all duration-300 ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}>
-                <User size={16} className={isDark ? 'text-white' : 'text-gray-600'} />
-              </button>
-
-              {/* Mobile Menu Toggle */}
+            {/* Mobile menu button */}
+            <div className="md:hidden">
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className={`lg:hidden p-2 rounded-full transition-all duration-300 ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
+                className={`p-2 rounded-lg transition-colors ${
+                  isDark
+                    ? 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
               >
-                {isMobileMenuOpen ? 
-                  <X size={16} className={isDark ? 'text-white' : 'text-gray-600'} /> : 
-                  <Menu size={16} className={isDark ? 'text-white' : 'text-gray-600'} />
-                }
+                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && (
-          <div className={`lg:hidden mt-4 ${isDark ? 'bg-gray-900/95' : 'bg-white/95'} backdrop-blur-2xl border ${isDark ? 'border-white/20' : 'border-gray-200'} rounded-2xl shadow-2xl overflow-hidden animate-fade-in`}>
-            <div className="p-4 space-y-3">
-              {mainTabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={tab.action}
-                  className={`w-full text-left flex items-center space-x-3 p-3 rounded-xl transition-all duration-200 ${isDark ? 'hover:bg-white/5 text-gray-300 hover:text-white' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'}`}
-                >
-                  <tab.icon size={18} />
-                  <span className="font-medium">{tab.label}</span>
-                  {tab.badge && renderBadge(tab.badge, 'bg-blue-500')}
-                </button>
-              ))}
+          <div className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              {navigationItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`block px-3 py-2 rounded-md text-base font-medium transition-colors flex items-center space-x-2 ${
+                      isActive(item.href)
+                        ? isDark
+                          ? 'bg-gray-800 text-white'
+                          : 'bg-gray-100 text-gray-900'
+                        : isDark
+                          ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Icon size={16} />
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
               
-              <hr className={`${isDark ? 'border-white/20' : 'border-gray-200'}`} />
-              
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={toggleTheme}
-                  className={`flex items-center space-x-3 p-3 rounded-xl transition-all duration-200 ${isDark ? 'hover:bg-white/5 text-gray-300 hover:text-white' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'}`}
-                >
-                  {isDark ? <Sun size={18} /> : <Moon size={18} />}
-                  <span className="font-medium">{isDark ? 'Light Mode' : 'Dark Mode'}</span>
-                </button>
+              {/* AI Tools in Mobile Menu */}
+              <div className="border-t border-gray-200 dark: border-gray-700 pt-2 mt-2">
+                <div className={`px-3 py-2 text-xs font-semibold uppercase tracking-wider ${
+                  isDark ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  AI Tools
+                </div>
+                {aiToolsItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                      isActive(item.href)
+                        ? isDark
+                          ? 'bg-gray-800 text-white'
+                          : 'bg-gray-100 text-gray-900'
+                        :  isDark
+                          ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
               </div>
             </div>
           </div>
         )}
       </div>
+      
+      {/* Click outside to close dropdown */}
+      {isAIDropdownOpen && (
+        <div 
+          className="fixed inset-0 z-10" 
+          onClick={() => setIsAIDropdownOpen(false)}
+        />
+      )}
     </nav>
   );
-});
+};
 
 export default Navbar;

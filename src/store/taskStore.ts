@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Task } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
+<<<<<<< HEAD
 interface TaskState {
   tasks: Record<string, Task>;
   isLoading: boolean;
@@ -29,6 +30,59 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       relatedTo: {
         type: 'contact',
         id: '1'
+=======
+interface TaskStore {
+  // State
+  tasks: Task[];
+  templates: TaskTemplate[];
+  activities: TaskActivity[];
+  calendarEvents: CalendarEvent[];
+  analytics: TaskAnalytics;
+  isLoading: boolean;
+  
+  // Filter states
+  statusFilter: TaskStatus | 'all';
+  priorityFilter: TaskPriority | 'all';
+  assigneeFilter: string | 'all';
+  dueDateFilter: 'all' | 'overdue' | 'today' | 'week' | 'month';
+  searchQuery: string;
+  activityFilter: ActivityFilter;
+  
+  // Actions - Tasks
+  fetchTasks: () => Promise<void>;
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  updateTask: (id: string, updates: Partial<Task>) => void;
+  deleteTask: (id: string) => void;
+  getTask: (id: string) => Task | undefined;
+  
+  // Computed properties
+  getFilteredTasks: () => Task[];
+  getTasksByStatus: (status: TaskStatus) => Task[];
+}
+
+export const useTaskStore = create<TaskStore>()(
+  persist(
+    (set, get) => ({
+      // Initial state
+      tasks: [],
+      templates: [],
+      activities: [],
+      calendarEvents: [],
+      isLoading: false,
+      analytics: {
+        totalTasks: 0,
+        completedTasks: 0,
+        overdueTasks: 0,
+        tasksCreatedToday: 0,
+        tasksCompletedToday: 0,
+        averageCompletionTime: 0,
+        productivityScore: 0,
+        upcomingDeadlines: 0,
+        tasksByPriority: { low: 0, medium: 0, high: 0 },
+        tasksByStatus: { pending: 0, 'in-progress': 0, completed: 0, cancelled: 0, overdue: 0 },
+        completionRate: 0,
+        trendsData: []
+>>>>>>> origin/main
       },
       category: 'follow-up',
       createdAt: new Date(),
@@ -45,6 +99,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         type: 'deal',
         id: 'deal-1'
       },
+<<<<<<< HEAD
       category: 'meeting',
       createdAt: new Date(),
       updatedAt: new Date()
@@ -71,6 +126,41 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       relatedTo: {
         type: 'contact',
         id: '4'
+=======
+      
+      // Task actions
+      fetchTasks: async () => {
+        set({ isLoading: true });
+        try {
+          // Simulate API call - replace with actual API call when backend is ready
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          // For now, keep existing tasks or initialize with empty array
+          set({ isLoading: false });
+        } catch (error) {
+          console.error('Error fetching tasks:', error);
+          set({ isLoading: false });
+        }
+      },
+      
+      addTask: (taskData) => {
+        const newTask: Task = {
+          ...taskData,
+          id: crypto.randomUUID(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          attachments: taskData.attachments || [],
+          subtasks: taskData.subtasks || [],
+          reminders: taskData.reminders || [],
+          tags: taskData.tags || [],
+          dependencies: taskData.dependencies || [],
+          customFields: taskData.customFields || {},
+          createdBy: taskData.createdBy || 'current-user'
+        };
+        
+        set((state) => ({ 
+          tasks: [...state.tasks, newTask] 
+        }));
+>>>>>>> origin/main
       },
       category: 'call',
       createdAt: new Date(Date.now() - 172800000), // 2 days ago

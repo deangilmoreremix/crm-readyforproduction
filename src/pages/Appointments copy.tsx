@@ -1,11 +1,28 @@
-<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Calendar, Check, ChevronLeft, ChevronRight, Clock, Copy, Link as LinkIcon, Mail, MapPin, Phone, Plus, RefreshCw, Search, User, Video, X } from 'lucide-react';
+import { 
+  Clock, 
+  User, 
+  Check, 
+  Video, 
+  Phone, 
+  MapPin, 
+  Plus, 
+  Calendar as CalendarIcon, 
+  AlertOctagon, 
+  ChevronRight, 
+  ChevronLeft, 
+  Mail, 
+  X,
+  RefreshCw,
+  Search,
+  AlertCircle,
+  Copy,
+  Link
+} from 'lucide-react';
 import { useAppointmentStore, Appointment, AppointmentType, AppointmentStatus } from '../store/appointmentStore';
 import Select from 'react-select';
-import { Link } from 'react-router-dom';
 
 const Appointments: React.FC = () => {
   const { 
@@ -288,7 +305,7 @@ const Appointments: React.FC = () => {
     }
   };
   
-  const handleContactSelect = (option: unknown) => {
+  const handleContactSelect = (option: any) => {
     if (option) {
       const contact = contacts.find(c => c.value === option.value);
       setFormData({
@@ -974,7 +991,7 @@ const Appointments: React.FC = () => {
                         className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
                         title="Open meeting link"
                       >
-                        <LinkIcon size={14} />
+                        <Link size={14} />
                       </button>
                     </div>
                   </div>
@@ -1031,20 +1048,6 @@ const Appointments: React.FC = () => {
           </div>
         </div>
       )}
-=======
-import React from 'react';
-
-const Appointments = () => {
-  return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Appointments</h1>
-        <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-gray-600">Appointments page content will be implemented here.</p>
-          <p className="text-sm text-gray-500 mt-2">This is a placeholder page.</p>
-        </div>
-      </div>
->>>>>>> origin/main
     </div>
   );
 };
